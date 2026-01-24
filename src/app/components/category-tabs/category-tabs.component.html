@@ -1,0 +1,14 @@
+<div class="flex flex-wrap gap-2 pb-4">
+  @for (category of categories; track category) {
+  <button
+    (click)="selectCategory(category)"
+    [class.bg-daidai]="selectedCategory === category"
+    [class.text-white]="selectedCategory === category"
+    [class.border-daidai]="selectedCategory === category"
+    [class.bg-white]="selectedCategory !== category"
+    class="px-4 py-2 rounded-full border text-sm whitespace-nowrap transition-all"
+  >
+    {{ category }}
+  </button>
+  }
+</div>

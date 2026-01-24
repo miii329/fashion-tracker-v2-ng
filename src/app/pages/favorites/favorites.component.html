@@ -1,0 +1,130 @@
+<app-category-tabs
+  [selectedCategory]="currentCategory"
+  (categoryChange)="onCategoryChanged($event)"
+>
+</app-category-tabs>
+<!-- 追加ボタン -->
+<app-add-button
+  class="flex justify-end mb-4"
+  label="お気に入りを追加"
+  (btnClick)="openAddModal()"
+>
+</app-add-button>
+<!-- お気に入り商品一覧をグリッド表示 -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  @for (item of filteredFavorites; track item.id) {
+  <app-card-base [title]="item.itemName">
+    <div class="space-y-2">
+      <span
+        class="text-xs font-semibold px-2 py-1 bg-pink-50 rounded text-pink-600"
+      >
+        {{ item.brandName }}
+      </span>
+      <span class="text-xs bg-gray-100 px-2 py-1 rounded">{{
+        item.category
+      }}</span>
+
+      @if (item.price) {
+      <p class="text-sm font-bold text-gray-900">¥{{ item.price | number }}</p>
+      }
+      <p class="text-sm text-gray-600 line-clamp-3">
+        {{ item.memo }}
+      </p>
+      @if (item.url) {
+      <a
+        [href]="item.url"
+        target="_blank"
+        class="text-blue-500 text-xs hover:underline block pt-2"
+      >
+        商品リンク →
+      </a>
+      }
+    </div>
+  </app-card-base>
+  } @empty {
+  <div class="col-span-full text-center py-10 text-gray-400">
+    <p>該当するカテゴリーのお気に入り商品は登録されていません。</p>
+  </div>
+  }
+</div>
+<!-- お気に入り商品入力モーダル -->
+<app-edit-modal-base
+  [isOpen]="isModalOpen"
+  title="商品を追加 ✨"
+  (submit)="saveItem()"
+  (close)="isModalOpen = false"
+>
+  <div class="space-y-4 mt-4">
+    <div>
+      <label class="block text-sm font-bold text-gray-500 ml-1">ブランド</label>
+      <select
+        [(ngModel)]="newItem['brandName']"
+        class="w-full border-gray-200 border p-3 rounded-xl mt-1 bg-white focus:ring-2 focus:ring-pink-100 outline-none appearance-none cursor-pointer transition-all"
+      >
+        <option value="" disabled selected>
+          ブランドを選択してください ✨
+        </option>
+
+        @for (name of existingBrandNames; track name) {
+        <option [value]="name">{{ name }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">カテゴリー</label>
+      <select
+        [(ngModel)]="newItem.category"
+        name="brandCategory"
+        class="w-full border p-2 rounded-lg mt-1 bg-white"
+      >
+        @for (option of modalCategoryOptions; track option) {
+        <option [value]="option">{{ option }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-gray-500 ml-1">商品名</label>
+      <input
+        type="text"
+        [(ngModel)]="newItem.itemName"
+        class="w-full border-gray-200 border p-3 rounded-xl mt-1 focus:ring-2 focus:ring-pink-100 outline-none"
+        placeholder="例: ワイヤレスヘッドホン"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-gray-500 ml-1">商品URL</label>
+      <input
+        type="url"
+        [(ngModel)]="newItem.url"
+        class="w-full border-gray-200 border p-3 rounded-xl mt-1 focus:ring-2 focus:ring-pink-100 outline-none"
+        placeholder="https://..."
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-gray-500 ml-1">価格</label>
+      <div class="relative flex items-center">
+        <span class="absolute left-4 text-gray-400">¥</span>
+        <input
+          type="number"
+          [(ngModel)]="newItem.price"
+          class="w-full border-gray-200 border p-3 pl-8 rounded-xl mt-1 focus:ring-2 focus:ring-pink-100 outline-none"
+          placeholder="0"
+        />
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-gray-500 ml-1">メモ</label>
+      <textarea
+        [(ngModel)]="newItem.memo"
+        class="w-full border-gray-200 border p-3 rounded-xl mt-1 focus:ring-2 focus:ring-pink-100 outline-none"
+        rows="3"
+        placeholder="サイズ感や欲しい理由など..."
+      ></textarea>
+    </div>
+  </div>
+</app-edit-modal-base>
