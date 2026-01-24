@@ -1,0 +1,9 @@
+services:
+  angular:
+    build: .
+    command: npx ng serve --host 0.0.0.0 --port 4200 --disable-host-check
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "4200:4200"
