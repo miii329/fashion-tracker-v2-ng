@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -21,12 +22,16 @@ export class AuthService {
   private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   constructor(private http: HttpClient) {
-    // ローカルストレージからユーザー情報を復元
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      this.currentUserSubject.next(JSON.parse(savedUser));
+    // ブラウザ環境でのみローカルストレージからユーザー情報を復元
+    if (this.isBrowser) {
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        this.currentUserSubject.next(JSON.parse(savedUser));
+      }
     }
   }
 
@@ -48,9 +53,11 @@ export class AuthService {
       })
       .pipe(
         tap((response) => {
-          // トークンとユーザー情報を保存
-          localStorage.setItem('authToken', response.token);
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
+          // ブラウザ環境でのみトークンとユーザー情報を保存
+          if (this.isBrowser) {
+            localStorage.setItem('authToken', response.token);
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+          }
           this.currentUserSubject.next(response.user);
         }),
       );
@@ -70,9 +77,11 @@ export class AuthService {
       })
       .pipe(
         tap((response) => {
-          // トークンとユーザー情報を保存
-          localStorage.setItem('authToken', response.token);
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
+          // ブラウザ環境でのみトークンとユーザー情報を保存
+          if (this.isBrowser) {
+            localStorage.setItem('authToken', response.token);
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+          }
           this.currentUserSubject.next(response.user);
         }),
       );
@@ -82,9 +91,11 @@ export class AuthService {
   logout(): Observable<any> {
     return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(
       tap(() => {
-        // ローカルストレージをクリア
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
+        // ブラウザ環境でのみローカルストレージをクリア
+        if (this.isBrowser) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('currentUser');
+        }
         this.currentUserSubject.next(null);
       }),
     );
@@ -97,7 +108,10 @@ export class AuthService {
 
   // トークンを取得
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    if (this.isBrowser) {
+      return localStorage.getItem('authToken');
+    }
+    return null;
   }
 
   // ログイン状態を確認
