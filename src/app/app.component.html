@@ -1,3 +1,17 @@
+<app-login-modal
+  [isOpen]="showLoginModal"
+  (closeModal)="closeLoginModal()"
+  (loginSubmit)="handleLogin($event)"
+  (switchModal)="switchToRegister()"
+></app-login-modal>
+
+<app-register-modal
+  [isOpen]="showRegisterModal"
+  (closeModal)="closeRegisterModal()"
+  (registerSubmit)="handleRegister($event)"
+  (switchModal)="switchToLogin()"
+></app-register-modal>
+
 <div class="py-8 px-6">
   <header>
     <div class="flex items-center justify-between">
@@ -8,7 +22,6 @@
             <app-icon
               name="user_icon"
               size="24px"
-              color=""
               containerClass="rounded-full text-daidai"
             />
             <span class="text-sm font-medium text-gray-600 hidden md:block">{{
