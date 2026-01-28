@@ -1,0 +1,28 @@
+<app-card-base [title]="item.itemName">
+  <div class="space-y-2">
+    <span
+      class="text-xs font-semibold px-2 py-1 bg-pink-50 rounded text-pink-600"
+    >
+      {{ item.brandName }}
+    </span>
+    <span class="text-xs bg-gray-100 px-2 py-1 rounded">{{
+      item.category
+    }}</span>
+
+    @if (item.price) {
+      <p class="text-sm font-bold text-gray-900">¥{{ item.price | number }}</p>
+    }
+    <p class="text-sm text-gray-600 line-clamp-3">
+      {{ item.memo }}
+    </p>
+    @if (item.url) {
+      <a
+        [href]="item.url"
+        target="_blank"
+        class="text-blue-500 text-xs hover:underline block pt-2"
+      >
+        商品リンク →
+      </a>
+    }
+  </div>
+</app-card-base>

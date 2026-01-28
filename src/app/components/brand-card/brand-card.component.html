@@ -1,0 +1,13 @@
+<app-card-base [title]="brand.name">
+  <div class="space-y-2">
+    <p class="text-sm text-gray-600">{{ brand.category }}</p>
+    <p class="text-sm">{{ brand.description }}</p>
+    <a
+      [href]="brand.url"
+      target="_blank"
+      class="text-blue-500 hover:underline text-sm"
+    >
+      公式サイト →
+    </a>
+  </div>
+</app-card-base>

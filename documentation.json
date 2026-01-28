@@ -3,12 +3,12 @@
     "interfaces": [
         {
             "name": "AuthResponse",
-            "id": "interface-AuthResponse-f720a02fbc093197f3b16b9e6c37ee7811a941cb4f53e969cc1a5230b1173cc0a97822d123b391f48709f63a13aafb3285fd76ad5396a47f3b0560cc0ffdc75e",
+            "id": "interface-AuthResponse-435c70047704a690cad7c5094427b291e05259afc1bf67744bea6c0d016b2fa80a66b623f234d75e9ece9f136992d29a366630e8a98b53df3912286844d4dfc5",
             "file": "src/app/services/auth.service.ts",
             "deprecated": false,
             "deprecationMessage": "",
             "type": "interface",
-            "sourceCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n\n  constructor(private http: HttpClient) {\n    // ローカルストレージからユーザー情報を復元\n    const savedUser = localStorage.getItem('currentUser');\n    if (savedUser) {\n      this.currentUserSubject.next(JSON.parse(savedUser));\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // トークンとユーザー情報を保存\n          localStorage.setItem('authToken', response.token);\n          localStorage.setItem('currentUser', JSON.stringify(response.user));\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // トークンとユーザー情報を保存\n          localStorage.setItem('authToken', response.token);\n          localStorage.setItem('currentUser', JSON.stringify(response.user));\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ローカルストレージをクリア\n        localStorage.removeItem('authToken');\n        localStorage.removeItem('currentUser');\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    return localStorage.getItem('authToken');\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
+            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
             "properties": [
                 {
                     "name": "token",
@@ -18,7 +18,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 14
+                    "line": 15
                 },
                 {
                     "name": "user",
@@ -28,7 +28,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 13
+                    "line": 14
                 }
             ],
             "indexSignatures": [],
@@ -138,12 +138,12 @@
         },
         {
             "name": "User",
-            "id": "interface-User-f720a02fbc093197f3b16b9e6c37ee7811a941cb4f53e969cc1a5230b1173cc0a97822d123b391f48709f63a13aafb3285fd76ad5396a47f3b0560cc0ffdc75e-1",
+            "id": "interface-User-435c70047704a690cad7c5094427b291e05259afc1bf67744bea6c0d016b2fa80a66b623f234d75e9ece9f136992d29a366630e8a98b53df3912286844d4dfc5-1",
             "file": "src/app/services/auth.service.ts",
             "deprecated": false,
             "deprecationMessage": "",
             "type": "interface",
-            "sourceCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n\n  constructor(private http: HttpClient) {\n    // ローカルストレージからユーザー情報を復元\n    const savedUser = localStorage.getItem('currentUser');\n    if (savedUser) {\n      this.currentUserSubject.next(JSON.parse(savedUser));\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // トークンとユーザー情報を保存\n          localStorage.setItem('authToken', response.token);\n          localStorage.setItem('currentUser', JSON.stringify(response.user));\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // トークンとユーザー情報を保存\n          localStorage.setItem('authToken', response.token);\n          localStorage.setItem('currentUser', JSON.stringify(response.user));\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ローカルストレージをクリア\n        localStorage.removeItem('authToken');\n        localStorage.removeItem('currentUser');\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    return localStorage.getItem('authToken');\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
+            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
             "properties": [
                 {
                     "name": "email",
@@ -153,7 +153,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 9
+                    "line": 10
                 },
                 {
                     "name": "id",
@@ -163,7 +163,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 7
+                    "line": 8
                 },
                 {
                     "name": "name",
@@ -173,7 +173,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 8
+                    "line": 9
                 }
             ],
             "indexSignatures": [],
@@ -188,7 +188,7 @@
     "injectables": [
         {
             "name": "AuthService",
-            "id": "injectable-AuthService-f720a02fbc093197f3b16b9e6c37ee7811a941cb4f53e969cc1a5230b1173cc0a97822d123b391f48709f63a13aafb3285fd76ad5396a47f3b0560cc0ffdc75e",
+            "id": "injectable-AuthService-435c70047704a690cad7c5094427b291e05259afc1bf67744bea6c0d016b2fa80a66b623f234d75e9ece9f136992d29a366630e8a98b53df3912286844d4dfc5",
             "file": "src/app/services/auth.service.ts",
             "properties": [
                 {
@@ -200,7 +200,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 21,
+                    "line": 22,
                     "modifierKind": [
                         123
                     ]
@@ -214,7 +214,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 23,
+                    "line": 24,
                     "modifierKind": [
                         125
                     ]
@@ -228,7 +228,35 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 22,
+                    "line": 23,
+                    "modifierKind": [
+                        123
+                    ]
+                },
+                {
+                    "name": "isBrowser",
+                    "defaultValue": "isPlatformBrowser(this.platformId)",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "unknown",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 26,
+                    "modifierKind": [
+                        123
+                    ]
+                },
+                {
+                    "name": "platformId",
+                    "defaultValue": "inject(PLATFORM_ID)",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "unknown",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 25,
                     "modifierKind": [
                         123
                     ]
@@ -241,7 +269,7 @@
                     "optional": false,
                     "returnType": "User | null",
                     "typeParameters": [],
-                    "line": 94,
+                    "line": 105,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -251,7 +279,7 @@
                     "optional": false,
                     "returnType": "string | null",
                     "typeParameters": [],
-                    "line": 99,
+                    "line": 110,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -261,7 +289,7 @@
                     "optional": false,
                     "returnType": "boolean",
                     "typeParameters": [],
-                    "line": 104,
+                    "line": 118,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -280,7 +308,7 @@
                     "optional": false,
                     "returnType": "Observable<AuthResponse>",
                     "typeParameters": [],
-                    "line": 60,
+                    "line": 67,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -303,7 +331,7 @@
                     "optional": false,
                     "returnType": "Observable<any>",
                     "typeParameters": [],
-                    "line": 82,
+                    "line": 91,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -322,7 +350,7 @@
                     "optional": false,
                     "returnType": "Observable<AuthResponse>",
                     "typeParameters": [],
-                    "line": 34,
+                    "line": 39,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -344,7 +372,7 @@
             "deprecationMessage": "",
             "description": "",
             "rawdescription": "\n",
-            "sourceCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n\n  constructor(private http: HttpClient) {\n    // ローカルストレージからユーザー情報を復元\n    const savedUser = localStorage.getItem('currentUser');\n    if (savedUser) {\n      this.currentUserSubject.next(JSON.parse(savedUser));\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // トークンとユーザー情報を保存\n          localStorage.setItem('authToken', response.token);\n          localStorage.setItem('currentUser', JSON.stringify(response.user));\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // トークンとユーザー情報を保存\n          localStorage.setItem('authToken', response.token);\n          localStorage.setItem('currentUser', JSON.stringify(response.user));\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ローカルストレージをクリア\n        localStorage.removeItem('authToken');\n        localStorage.removeItem('currentUser');\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    return localStorage.getItem('authToken');\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
+            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
             "constructorObj": {
                 "name": "constructor",
                 "description": "",
@@ -360,7 +388,7 @@
                         "deprecationMessage": ""
                     }
                 ],
-                "line": 23,
+                "line": 26,
                 "jsdoctags": [
                     {
                         "name": "http",
@@ -770,6 +798,53 @@
                 "OnInit"
             ],
             "templateData": "<app-login-modal\n  [isOpen]=\"showLoginModal\"\n  (closeModal)=\"closeLoginModal()\"\n  (loginSubmit)=\"handleLogin($event)\"\n  (switchModal)=\"switchToRegister()\"\n></app-login-modal>\n\n<app-register-modal\n  [isOpen]=\"showRegisterModal\"\n  (closeModal)=\"closeRegisterModal()\"\n  (registerSubmit)=\"handleRegister($event)\"\n  (switchModal)=\"switchToLogin()\"\n></app-register-modal>\n\n<div class=\"py-8 px-6\">\n  <header>\n    <div class=\"flex items-center justify-between\">\n      <h1 class=\"text-[30px] font-bold text-daidai\">TrendClip</h1>\n      <div class=\"flex items-center gap-3\">\n        @if (user) {\n          <div class=\"flex items-center gap-2\">\n            <app-icon\n              name=\"user_icon\"\n              size=\"24px\"\n              containerClass=\"rounded-full text-daidai\"\n            />\n            <span class=\"text-sm font-medium text-gray-600 hidden md:block\">{{\n              user.name\n            }}</span>\n          </div>\n          <button\n            (click)=\"logout()\"\n            class=\"text-xs font-bold text-gray-400 hover:text-pink-500 transition-colors\"\n          >\n            ログアウト\n          </button>\n        } @else {\n          <button\n            (click)=\"login()\"\n            class=\"bg-daidai text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-[#cc5555] transition-all shadow-md shadow-pink-100\"\n          >\n            ログイン\n          </button>\n        }\n      </div>\n    </div>\n    <p class=\"mb-8\">お気に入りのブランドを管理して最新動向をチェック</p>\n  </header>\n  <main>\n    <div class=\"mb-6 flex gap-4 border-b border-gray-200\">\n      <a\n        routerLink=\"/brands\"\n        routerLinkActive=\"text-daidai border-b border-daidai\"\n        class=\"hover:text-daidai transition px-3 py-2 md:px-6 md:py-3\"\n      >\n        ブランド一覧\n      </a>\n      <a\n        routerLink=\"/new-items\"\n        routerLinkActive=\"text-daidai border-b border-daidai\"\n        class=\"hover:text-daidai transition px-3 py-2 md:px-6 md:py-3\"\n      >\n        新作商品\n      </a>\n      <a\n        routerLink=\"/favorites\"\n        routerLinkActive=\"text-daidai border-b border-daidai\"\n        class=\"hover:text-daidai transition px-3 py-2 md:px-6 md:py-3\"\n      >\n        お気に入り商品\n      </a>\n    </div>\n    <section class=\"content\">\n      <router-outlet />\n    </section>\n  </main>\n</div>\n"
+        },
+        {
+            "name": "BrandCardComponent",
+            "id": "component-BrandCardComponent-c6e8b914b3f42399ab9fd8214fbd760e505b7986f811400ca1106ba877ab02159e0d8653d62ced5b63e260c8647290d932dd6aebac9c9ee34f79e163134d1d49",
+            "file": "src/app/components/brand-card/brand-card.component.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-brand-card",
+            "styleUrls": [],
+            "styles": [],
+            "template": "<app-card-base [title]=\"brand.name\">\n  <div class=\"space-y-2\">\n    <p class=\"text-sm text-gray-600\">{{ brand.category }}</p>\n    <p class=\"text-sm\">{{ brand.description }}</p>\n    <a\n      [href]=\"brand.url\"\n      target=\"_blank\"\n      class=\"text-blue-500 hover:underline text-sm\"\n    >\n      公式サイト →\n    </a>\n  </div>\n</app-card-base>\n",
+            "templateUrl": [
+                "./brand-card.component.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [],
+            "methodsClass": [],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "CardBaseComponent",
+                    "type": "component"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { CardBaseComponent } from '../card-base/card-base.component';\n\n@Component({\n  selector: 'app-brand-card',\n  imports: [CommonModule, CardBaseComponent],\n  templateUrl: './brand-card.component.html',\n  template: `\n    <app-card-base [title]=\"brand.name\">\n      <div class=\"space-y-2\">\n        <p class=\"text-sm text-gray-600\">{{ brand.category }}</p>\n        <p class=\"text-sm\">{{ brand.description }}</p>\n        <a\n          [href]=\"brand.url\"\n          target=\"_blank\"\n          class=\"text-blue-500 hover:underline text-sm\"\n        >\n          公式サイト →\n        </a>\n      </div>\n    </app-card-base>\n  `,\n})\nexport class BrandCardComponent {}\n",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "extends": [],
+            "templateData": "<p>brand-card works!</p>\n"
         },
         {
             "name": "BrandsComponent",
@@ -2660,6 +2735,15 @@
                 "status": "low"
             },
             {
+                "filePath": "src/app/components/brand-card/brand-card.component.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "BrandCardComponent",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
                 "filePath": "src/app/components/card-base/card-base.component.ts",
                 "type": "component",
                 "linktype": "component",
@@ -2746,7 +2830,7 @@
                 "linktype": "injectable",
                 "name": "AuthService",
                 "coveragePercent": 0,
-                "coverageCount": "0/11",
+                "coverageCount": "0/13",
                 "status": "low"
             },
             {
