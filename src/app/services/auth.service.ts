@@ -19,7 +19,7 @@ interface AuthResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL
+  private apiUrl = 'http://localhost:3000/api/v2'; // Rails APIのURL
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   private platformId = inject(PLATFORM_ID);
@@ -43,7 +43,7 @@ export class AuthService {
     passwordConfirm: string;
   }): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {
+      .post<AuthResponse>(`${this.apiUrl}/users`, {
         user: {
           fullname: userData.fullname,
           email_address: userData.email,
@@ -69,12 +69,10 @@ export class AuthService {
     password: string;
   }): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {
-        user: {
-          email: credentials.email,
-          password: credentials.password,
-        },
-      })
+      .post<AuthResponse>(`${this.apiUrl}/session`, {
+        email_address: credentials.email,
+        password: credentials.password,
+      }, { withCredentials: true })
       .pipe(
         tap((response) => {
           // ブラウザ環境でのみトークンとユーザー情報を保存
@@ -89,7 +87,7 @@ export class AuthService {
 
   // ログアウト
   logout(): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(
+    return this.http.delete(`${this.apiUrl}/session`, { withCredentials: true }).pipe(
       tap(() => {
         // ブラウザ環境でのみローカルストレージをクリア
         if (this.isBrowser) {
@@ -117,5 +115,14 @@ export class AuthService {
   // ログイン状態を確認
   isLoggedIn(): boolean {
     return !!this.getToken();
+  }
+
+  // ユーザー状態をクリア（401エラー時のログアウト用）
+  clearUserState(): void {
+    if (this.isBrowser) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+    }
+    this.currentUserSubject.next(null);
   }
 }

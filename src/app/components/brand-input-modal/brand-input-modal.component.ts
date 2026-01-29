@@ -11,17 +11,6 @@ import { EditModalBaseComponent } from '../edit-modal-base/edit-modal-base.compo
 })
 export class BrandInputModalComponent {
   @Input() isOpen = false;
-  @Input() brand: {
-    name: string;
-    category: string;
-    description: string;
-    url: string;
-  } = {
-    name: '',
-    category: '',
-    description: '',
-    url: '',
-  };
 
   @Output() closeModal = new EventEmitter<void>();
   @Output() submitBrand = new EventEmitter<{
@@ -31,10 +20,30 @@ export class BrandInputModalComponent {
     url: string;
   }>();
 
+  // カテゴリーのリスト
+  readonly CATEGORIES = [
+    'ファッション',
+    'メイク',
+    'アクセサリー',
+    'カラコン',
+    'その他',
+  ];
+
+  // モーダル入力用のオブジェクト（内部で管理）
+  brand = {
+    name: '',
+    category: '',
+    description: '',
+    url: '',
+  };
+
+  // モーダルを閉じる
   close() {
+    this.resetForm();
     this.closeModal.emit();
   }
 
+  // 保存処理
   onSubmit() {
     if (this.brand.name && this.brand.category) {
       this.submitBrand.emit({ ...this.brand });
@@ -42,6 +51,7 @@ export class BrandInputModalComponent {
     }
   }
 
+  // フォームをリセット
   resetForm() {
     this.brand = {
       name: '',
@@ -51,6 +61,7 @@ export class BrandInputModalComponent {
     };
   }
 
+  // バリデーション
   get isValid(): boolean {
     return !!(this.brand.name && this.brand.category);
   }

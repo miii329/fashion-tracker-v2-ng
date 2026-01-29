@@ -1,23 +1,27 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AddButtonComponent } from '@/components/add-button/add-button.component';
-import { EditModalBaseComponent } from '@/components/edit-modal-base/edit-modal-base.component';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { CategoryTabsComponent } from '@/components/category-tabs/category-tabs.component';
+import { BrandInputModalComponent } from "@/components/brand-input-modal/brand-input-modal.component";
+import { BrandService, Brand } from '@/services/brand.service';
+import { BrandCardComponent } from "@/components/brand-card/brand-card.component";
+import { AuthService } from '@/services/auth.service';
 
 @Component({
   selector: 'app-brands',
   imports: [
     FormsModule,
     AddButtonComponent,
-    EditModalBaseComponent,
     CommonModule,
     CategoryTabsComponent,
-  ],
+    BrandInputModalComponent,
+    BrandCardComponent
+],
   templateUrl: './brands.component.html',
   styleUrl: './brands.component.css',
 })
-export class BrandsComponent {
+export class BrandsComponent implements OnInit {
   // モーダル管理
   isModalOpen = false;
 
@@ -34,19 +38,44 @@ export class BrandsComponent {
   // 選択中のカテゴリー
   selectedCategory = 'すべて';
 
-  // モーダル入力用のオブジェクト
-  newBrand = {
-    name: '',
-    category: '',
-    description: '',
-    url: '',
-  };
-
   // ブランドリスト（後でRails APIから取得）
-  brands: any[] = [];
+  brands: Brand[] = [];
+
+  constructor(private brandService: BrandService, private authService: AuthService) {}
+
+  // コンポーネント初期化時にブランドデータを読み込み
+  ngOnInit() {
+    this.loadBrands();
+    
+    // ログイン状態の変化を監視
+    this.authService.currentUser$.subscribe(() => {
+      // ユーザー状態が変わったらブランドデータを再読み込み
+      this.loadBrands();
+    });
+  }
+
+  // ブランドデータをAPIから取得
+  loadBrands() {
+    // ログインしている場合のみユーザーのブランドを取得
+    if (this.authService.isLoggedIn()) {
+      this.brandService.getBrands().subscribe({
+        next: (brands) => {
+          this.brands = brands;
+          console.log('ユーザーのブランドデータを読み込みました:', brands);
+        },
+        error: (error) => {
+          console.error('ユーザーブランドデータ読み込みエラー:', error);
+        }
+      });
+    } else {
+      // ログインしていない場合は空のリストを設定
+      this.brands = [];
+      console.log('ログインしていないため、ブランドデータは表示されません');
+    }
+  }
 
   // フィルタリングされたブランド
-  get filteredBrands(): any[] {
+  get filteredBrands(): Brand[] {
     if (this.selectedCategory === 'すべて') {
       return this.brands;
     }
@@ -67,45 +96,35 @@ export class BrandsComponent {
 
   // モーダルを開く
   openAddModal() {
-    this.newBrand = {
-      name: '',
-      category: '',
-      description: '',
-      url: '',
-    };
     this.isModalOpen = true;
   }
 
   // モーダルを閉じる
-  handleClose() {
+  closeModal() {
     this.isModalOpen = false;
   }
 
-  // モーダルのカテゴリーオプション
-  get modalCategoryOptions() {
-    return this.CATEGORIES.filter((c) => c !== 'すべて');
-  }
+  // 保存処理（Rails APIと連携）
+  async submitBrand(brandData: { name: string; category: string; description: string; url: string }) {
+    try {
+      // BrandService経由でAPIにPOSTリクエストを送信
+      const newBrand = await this.brandService.createBrand({
+        name: brandData.name,
+        category: brandData.category,
+        description: brandData.description,
+        url: brandData.url
+      }).toPromise();
 
-  // 保存処理（後でRails APIと連携）
-  async saveBrand() {
-    if (this.newBrand.name.trim()) {
-      // TODO: Rails APIにPOSTリクエストを送信
-      console.log('ブランド保存:', this.newBrand);
-
-      // 仮のローカル追加
-      this.brands.unshift({
-        id: Date.now(),
-        ...this.newBrand,
-        createdAt: new Date(),
-      });
-
-      this.isModalOpen = false;
-      this.newBrand = {
-        name: '',
-        category: 'ファッション',
-        description: '',
-        url: '',
-      };
+      if (newBrand) {
+        console.log('ブランドを保存しました:', newBrand);
+        // 成功した場合、ユーザーのブランドリストを再読み込み
+        this.loadBrands();
+      }
+    } catch (error) {
+      console.error('ブランド保存エラー:', error);
+      // エラー処理（必要に応じてユーザーに通知）
     }
+
+    this.isModalOpen = false;
   }
 }
