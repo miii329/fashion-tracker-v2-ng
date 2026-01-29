@@ -6,6 +6,7 @@ import { CategoryTabsComponent } from '@/components/category-tabs/category-tabs.
 import { BrandInputModalComponent } from "@/components/brand-input-modal/brand-input-modal.component";
 import { BrandService, Brand } from '@/services/brand.service';
 import { BrandCardComponent } from "@/components/brand-card/brand-card.component";
+import { AuthService } from '@/services/auth.service';
 
 @Component({
   selector: 'app-brands',
@@ -40,24 +41,37 @@ export class BrandsComponent implements OnInit {
   // ブランドリスト（後でRails APIから取得）
   brands: Brand[] = [];
 
-  constructor(private brandService: BrandService) {}
+  constructor(private brandService: BrandService, private authService: AuthService) {}
 
   // コンポーネント初期化時にブランドデータを読み込み
   ngOnInit() {
     this.loadBrands();
+    
+    // ログイン状態の変化を監視
+    this.authService.currentUser$.subscribe(() => {
+      // ユーザー状態が変わったらブランドデータを再読み込み
+      this.loadBrands();
+    });
   }
 
   // ブランドデータをAPIから取得
   loadBrands() {
-    this.brandService.getBrands().subscribe({
-      next: (brands) => {
-        this.brands = brands;
-        console.log('ブランドデータを読み込みました:', brands);
-      },
-      error: (error) => {
-        console.error('ブランドデータ読み込みエラー:', error);
-      }
-    });
+    // ログインしている場合のみユーザーのブランドを取得
+    if (this.authService.isLoggedIn()) {
+      this.brandService.getBrands().subscribe({
+        next: (brands) => {
+          this.brands = brands;
+          console.log('ユーザーのブランドデータを読み込みました:', brands);
+        },
+        error: (error) => {
+          console.error('ユーザーブランドデータ読み込みエラー:', error);
+        }
+      });
+    } else {
+      // ログインしていない場合は空のリストを設定
+      this.brands = [];
+      console.log('ログインしていないため、ブランドデータは表示されません');
+    }
   }
 
   // フィルタリングされたブランド
@@ -103,7 +117,7 @@ export class BrandsComponent implements OnInit {
 
       if (newBrand) {
         console.log('ブランドを保存しました:', newBrand);
-        // 成功した場合、ブランドリストを再読み込み
+        // 成功した場合、ユーザーのブランドリストを再読み込み
         this.loadBrands();
       }
     } catch (error) {

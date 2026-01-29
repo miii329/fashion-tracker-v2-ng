@@ -3,12 +3,12 @@
     "interfaces": [
         {
             "name": "AuthResponse",
-            "id": "interface-AuthResponse-435c70047704a690cad7c5094427b291e05259afc1bf67744bea6c0d016b2fa80a66b623f234d75e9ece9f136992d29a366630e8a98b53df3912286844d4dfc5",
+            "id": "interface-AuthResponse-ebd34df066a76ca0ffb9234f45929c7359c07561e3b1910d5d3b30a0415ba0e17e974bb63c7722d2cb68cee595ea5a53b0ef52764d20e4e70bf8503430c2d20a",
             "file": "src/app/services/auth.service.ts",
             "deprecated": false,
             "deprecationMessage": "",
             "type": "interface",
-            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
+            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api/v2'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/session`, {\n        email_address: credentials.email,\n        password: credentials.password,\n      }, { withCredentials: true })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/session`, { withCredentials: true }).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n\n  // ユーザー状態をクリア（401エラー時のログアウト用）\n  clearUserState(): void {\n    if (this.isBrowser) {\n      localStorage.removeItem('authToken');\n      localStorage.removeItem('currentUser');\n    }\n    this.currentUserSubject.next(null);\n  }\n}\n",
             "properties": [
                 {
                     "name": "token",
@@ -138,12 +138,12 @@
         },
         {
             "name": "User",
-            "id": "interface-User-435c70047704a690cad7c5094427b291e05259afc1bf67744bea6c0d016b2fa80a66b623f234d75e9ece9f136992d29a366630e8a98b53df3912286844d4dfc5-1",
+            "id": "interface-User-ebd34df066a76ca0ffb9234f45929c7359c07561e3b1910d5d3b30a0415ba0e17e974bb63c7722d2cb68cee595ea5a53b0ef52764d20e4e70bf8503430c2d20a-1",
             "file": "src/app/services/auth.service.ts",
             "deprecated": false,
             "deprecationMessage": "",
             "type": "interface",
-            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
+            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api/v2'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/session`, {\n        email_address: credentials.email,\n        password: credentials.password,\n      }, { withCredentials: true })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/session`, { withCredentials: true }).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n\n  // ユーザー状態をクリア（401エラー時のログアウト用）\n  clearUserState(): void {\n    if (this.isBrowser) {\n      localStorage.removeItem('authToken');\n      localStorage.removeItem('currentUser');\n    }\n    this.currentUserSubject.next(null);\n  }\n}\n",
             "properties": [
                 {
                     "name": "email",
@@ -188,12 +188,12 @@
     "injectables": [
         {
             "name": "AuthService",
-            "id": "injectable-AuthService-435c70047704a690cad7c5094427b291e05259afc1bf67744bea6c0d016b2fa80a66b623f234d75e9ece9f136992d29a366630e8a98b53df3912286844d4dfc5",
+            "id": "injectable-AuthService-ebd34df066a76ca0ffb9234f45929c7359c07561e3b1910d5d3b30a0415ba0e17e974bb63c7722d2cb68cee595ea5a53b0ef52764d20e4e70bf8503430c2d20a",
             "file": "src/app/services/auth.service.ts",
             "properties": [
                 {
                     "name": "apiUrl",
-                    "defaultValue": "'http://localhost:3000/api'",
+                    "defaultValue": "'http://localhost:3000/api/v2'",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "string",
@@ -264,12 +264,22 @@
             ],
             "methods": [
                 {
+                    "name": "clearUserState",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 121,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
                     "name": "getCurrentUser",
                     "args": [],
                     "optional": false,
                     "returnType": "User | null",
                     "typeParameters": [],
-                    "line": 105,
+                    "line": 103,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -279,7 +289,7 @@
                     "optional": false,
                     "returnType": "string | null",
                     "typeParameters": [],
-                    "line": 110,
+                    "line": 108,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -289,7 +299,7 @@
                     "optional": false,
                     "returnType": "boolean",
                     "typeParameters": [],
-                    "line": 118,
+                    "line": 116,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -331,7 +341,7 @@
                     "optional": false,
                     "returnType": "Observable<any>",
                     "typeParameters": [],
-                    "line": 91,
+                    "line": 89,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -372,7 +382,7 @@
             "deprecationMessage": "",
             "description": "",
             "rawdescription": "\n",
-            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/v2/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/auth/login`, {\n        user: {\n          email: credentials.email,\n          password: credentials.password,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/auth/logout`).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n}\n",
+            "sourceCode": "import { Injectable, PLATFORM_ID, inject } from '@angular/core';\nimport { isPlatformBrowser } from '@angular/common';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable, BehaviorSubject } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ninterface AuthResponse {\n  user: User;\n  token: string;\n}\n\n@Injectable({\n  providedIn: 'root',\n})\nexport class AuthService {\n  private apiUrl = 'http://localhost:3000/api/v2'; // Rails APIのURL\n  private currentUserSubject = new BehaviorSubject<User | null>(null);\n  public currentUser$ = this.currentUserSubject.asObservable();\n  private platformId = inject(PLATFORM_ID);\n  private isBrowser = isPlatformBrowser(this.platformId);\n\n  constructor(private http: HttpClient) {\n    // ブラウザ環境でのみローカルストレージからユーザー情報を復元\n    if (this.isBrowser) {\n      const savedUser = localStorage.getItem('currentUser');\n      if (savedUser) {\n        this.currentUserSubject.next(JSON.parse(savedUser));\n      }\n    }\n  }\n\n  // 新規登録\n  register(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/users`, {\n        user: {\n          fullname: userData.fullname,\n          email_address: userData.email,\n          password: userData.password,\n          password_confirmation: userData.passwordConfirm,\n        },\n      })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログイン\n  login(credentials: {\n    email: string;\n    password: string;\n  }): Observable<AuthResponse> {\n    return this.http\n      .post<AuthResponse>(`${this.apiUrl}/session`, {\n        email_address: credentials.email,\n        password: credentials.password,\n      }, { withCredentials: true })\n      .pipe(\n        tap((response) => {\n          // ブラウザ環境でのみトークンとユーザー情報を保存\n          if (this.isBrowser) {\n            localStorage.setItem('authToken', response.token);\n            localStorage.setItem('currentUser', JSON.stringify(response.user));\n          }\n          this.currentUserSubject.next(response.user);\n        }),\n      );\n  }\n\n  // ログアウト\n  logout(): Observable<any> {\n    return this.http.delete(`${this.apiUrl}/session`, { withCredentials: true }).pipe(\n      tap(() => {\n        // ブラウザ環境でのみローカルストレージをクリア\n        if (this.isBrowser) {\n          localStorage.removeItem('authToken');\n          localStorage.removeItem('currentUser');\n        }\n        this.currentUserSubject.next(null);\n      }),\n    );\n  }\n\n  // 現在のユーザーを取得\n  getCurrentUser(): User | null {\n    return this.currentUserSubject.value;\n  }\n\n  // トークンを取得\n  getToken(): string | null {\n    if (this.isBrowser) {\n      return localStorage.getItem('authToken');\n    }\n    return null;\n  }\n\n  // ログイン状態を確認\n  isLoggedIn(): boolean {\n    return !!this.getToken();\n  }\n\n  // ユーザー状態をクリア（401エラー時のログアウト用）\n  clearUserState(): void {\n    if (this.isBrowser) {\n      localStorage.removeItem('authToken');\n      localStorage.removeItem('currentUser');\n    }\n    this.currentUserSubject.next(null);\n  }\n}\n",
             "constructorObj": {
                 "name": "constructor",
                 "description": "",
@@ -504,7 +514,7 @@
         },
         {
             "name": "AppComponent",
-            "id": "component-AppComponent-4f30a1f21fc915958614dbf17984abbe6f5cabbaa375ac48feda62128f16b0379a1a4602b933a73424ae00a3ab787616c4cd1d4ba08963a6905deeab6495b6d9",
+            "id": "component-AppComponent-a835e76f8579c11a73dd39b33ce1f5ab315b00c8d8834f2c71670c651a624e180a2cf5638ac2cdf35911a0f21396ff0670ba41fa61807c1e2e81c96d5b42a441",
             "file": "src/app/app.component.ts",
             "encapsulation": [],
             "entryComponents": [],
@@ -585,7 +595,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 51,
+                    "line": 52,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -595,7 +605,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 56,
+                    "line": 57,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -614,7 +624,7 @@
                     "optional": false,
                     "returnType": "any",
                     "typeParameters": [],
-                    "line": 73,
+                    "line": 74,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
@@ -649,7 +659,7 @@
                     "optional": false,
                     "returnType": "any",
                     "typeParameters": [],
-                    "line": 89,
+                    "line": 90,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
@@ -675,7 +685,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 45,
+                    "line": 46,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -685,7 +695,7 @@
                     "optional": false,
                     "returnType": "any",
                     "typeParameters": [],
-                    "line": 139,
+                    "line": 140,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
@@ -708,7 +718,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 67,
+                    "line": 68,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -718,7 +728,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 61,
+                    "line": 62,
                     "deprecated": false,
                     "deprecationMessage": ""
                 }
@@ -758,7 +768,7 @@
             "description": "",
             "rawdescription": "\n",
             "type": "component",
-            "sourceCode": "import { Component, OnInit } from '@angular/core';\nimport { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';\nimport { CommonModule } from '@angular/common';\nimport { UserIconComponent } from './components/app-icon/app-icon.component';\nimport { LoginModalComponent } from './components/login-modal/login-modal.component';\nimport { RegisterModalComponent } from './components/register-modal/register-modal.component';\nimport { AuthService } from './services/auth.service';\n\n@Component({\n  selector: 'app-root',\n  imports: [\n    RouterOutlet, // <router-outlet> を使うために必要\n    RouterLink, // [routerLink] を使うために必要\n    RouterLinkActive, // [routerLinkActive] を使うために必要\n    CommonModule,\n    UserIconComponent, // ユーザーアイコンコンポーネント\n    LoginModalComponent, // ログインモーダルコンポーネント\n    RegisterModalComponent, // 新規登録モーダルコンポーネント\n  ],\n  templateUrl: './app.component.html',\n  styleUrl: './app.component.css',\n})\nexport class AppComponent implements OnInit {\n  // タイトル\n  title = 'fashion-trends-tracker';\n  // カテゴリー管理用（初期値は 'すべて'）\n  selectedCategory: string = 'すべて';\n  // ログインユーザーの状態\n  user: any = null;\n  // ログインモーダルの表示状態\n  showLoginModal = false;\n  // 新規登録モーダルの表示状態\n  showRegisterModal = false;\n\n  constructor(private authService: AuthService) {}\n\n  ngOnInit() {\n    // ユーザー状態を購読\n    this.authService.currentUser$.subscribe((user) => {\n      this.user = user;\n    });\n  }\n\n  // ログインモーダルを開く\n  login() {\n    this.showLoginModal = true;\n    this.showRegisterModal = false;\n  }\n\n  // ログインモーダルを閉じる\n  closeLoginModal() {\n    this.showLoginModal = false;\n  }\n\n  // 新規登録モーダルを閉じる\n  closeRegisterModal() {\n    this.showRegisterModal = false;\n  }\n\n  // ログインから新規登録へ切り替え\n  switchToRegister() {\n    this.showLoginModal = false;\n    this.showRegisterModal = true;\n  }\n\n  // 新規登録からログインへ切り替え\n  switchToLogin() {\n    this.showRegisterModal = false;\n    this.showLoginModal = true;\n  }\n\n  // ログイン処理\n  async handleLogin(credentials: { email: string; password: string }) {\n    this.authService.login(credentials).subscribe({\n      next: (response) => {\n        console.log('ログイン成功', response);\n        this.closeLoginModal();\n      },\n      error: (error) => {\n        console.error('ログインエラー', error);\n        alert(\n          'ログインに失敗しました。メールアドレスまたはパスワードが正しくありません。',\n        );\n      },\n    });\n  }\n\n  // 新規登録処理\n  async handleRegister(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }) {\n    // パスワード一致確認\n    if (userData.password !== userData.passwordConfirm) {\n      alert('パスワードが一致しません。');\n      return;\n    }\n\n    this.authService.register(userData).subscribe({\n      next: (response) => {\n        console.log('新規登録成功', response);\n        this.closeRegisterModal();\n        alert('登録が完了しました！');\n      },\n      error: (error) => {\n        console.error('新規登録エラー - 完全なエラーオブジェクト:', error);\n        console.error('ステータスコード:', error.status);\n        console.error('エラーメッセージ:', error.message);\n        console.error('エラーレスポンス:', error.error);\n        console.error('エラーURL:', error.url);\n\n        let errorMessage = '登録に失敗しました。もう一度お試しください。';\n\n        // ステータスコードに応じたメッセージ\n        if (error.status === 0) {\n          errorMessage =\n            'サーバーに接続できません。Rails APIが起動しているか確認してください。\\nURL: http://localhost:3000/api/v2/users';\n        } else if (error.status === 404) {\n          errorMessage = 'エンドポイントが見つかりません。\\nURL: ' + error.url;\n        } else if (error.status === 422) {\n          errorMessage =\n            'バリデーションエラー:\\n' + JSON.stringify(error.error, null, 2);\n        } else if (error.error?.errors) {\n          errorMessage = Array.isArray(error.error.errors)\n            ? error.error.errors.join('\\n')\n            : JSON.stringify(error.error.errors, null, 2);\n        } else if (error.error?.message) {\n          errorMessage = error.error.message;\n        }\n\n        alert(errorMessage);\n      },\n    });\n  }\n\n  // ログアウト処理\n  async logout() {\n    if (confirm('ログアウトしますか？')) {\n      this.authService.logout().subscribe({\n        next: () => {\n          console.log('ログアウト成功');\n        },\n        error: (error) => {\n          console.error('ログアウトエラー', error);\n        },\n      });\n    }\n  }\n}\n",
+            "sourceCode": "import { Component, OnInit } from '@angular/core';\nimport { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';\nimport { CommonModule } from '@angular/common';\nimport { UserIconComponent } from './components/app-icon/app-icon.component';\nimport { LoginModalComponent } from './components/login-modal/login-modal.component';\nimport { RegisterModalComponent } from './components/register-modal/register-modal.component';\nimport { AuthService } from './services/auth.service';\n\n@Component({\n  selector: 'app-root',\n  imports: [\n    RouterOutlet, // <router-outlet> を使うために必要\n    RouterLink, // [routerLink] を使うために必要\n    RouterLinkActive, // [routerLinkActive] を使うために必要\n    CommonModule,\n    UserIconComponent, // ユーザーアイコンコンポーネント\n    LoginModalComponent, // ログインモーダルコンポーネント\n    RegisterModalComponent, // 新規登録モーダルコンポーネント\n  ],\n  templateUrl: './app.component.html',\n  styleUrl: './app.component.css',\n})\nexport class AppComponent implements OnInit {\n  // タイトル\n  title = 'fashion-trends-tracker';\n  // カテゴリー管理用（初期値は 'すべて'）\n  selectedCategory: string = 'すべて';\n  // ログインユーザーの状態\n  user: any = null;\n  // ログインモーダルの表示状態\n  showLoginModal = false;\n  // 新規登録モーダルの表示状態\n  showRegisterModal = false;\n\n  constructor(private authService: AuthService) {}\n\n  ngOnInit() {\n    // ユーザー状態を購読\n    this.authService.currentUser$.subscribe((user) => {\n      this.user = user;\n      console.log('currentUser updated:', user);\n    });\n  }\n\n  // ログインモーダルを開く\n  login() {\n    this.showLoginModal = true;\n    this.showRegisterModal = false;\n  }\n\n  // ログインモーダルを閉じる\n  closeLoginModal() {\n    this.showLoginModal = false;\n  }\n\n  // 新規登録モーダルを閉じる\n  closeRegisterModal() {\n    this.showRegisterModal = false;\n  }\n\n  // ログインから新規登録へ切り替え\n  switchToRegister() {\n    this.showLoginModal = false;\n    this.showRegisterModal = true;\n  }\n\n  // 新規登録からログインへ切り替え\n  switchToLogin() {\n    this.showRegisterModal = false;\n    this.showLoginModal = true;\n  }\n\n  // ログイン処理\n  async handleLogin(credentials: { email: string; password: string }) {\n    this.authService.login(credentials).subscribe({\n      next: (response) => {\n        console.log('ログイン成功', response);\n        this.closeLoginModal();\n      },\n      error: (error) => {\n        console.error('ログインエラー', error);\n        alert(\n          'ログインに失敗しました。メールアドレスまたはパスワードが正しくありません。',\n        );\n      },\n    });\n  }\n\n  // 新規登録処理\n  async handleRegister(userData: {\n    fullname: string;\n    email: string;\n    password: string;\n    passwordConfirm: string;\n  }) {\n    // パスワード一致確認\n    if (userData.password !== userData.passwordConfirm) {\n      alert('パスワードが一致しません。');\n      return;\n    }\n\n    this.authService.register(userData).subscribe({\n      next: (response) => {\n        console.log('新規登録成功', response);\n        this.closeRegisterModal();\n        alert('登録が完了しました！');\n      },\n      error: (error) => {\n        console.error('新規登録エラー - 完全なエラーオブジェクト:', error);\n        console.error('ステータスコード:', error.status);\n        console.error('エラーメッセージ:', error.message);\n        console.error('エラーレスポンス:', error.error);\n        console.error('エラーURL:', error.url);\n\n        let errorMessage = '登録に失敗しました。もう一度お試しください。';\n\n        // ステータスコードに応じたメッセージ\n        if (error.status === 0) {\n          errorMessage =\n            'サーバーに接続できません。Rails APIが起動しているか確認してください。\\nURL: http://localhost:3000/api/v2/users';\n        } else if (error.status === 404) {\n          errorMessage = 'エンドポイントが見つかりません。\\nURL: ' + error.url;\n        } else if (error.status === 422) {\n          errorMessage =\n            'バリデーションエラー:\\n' + JSON.stringify(error.error, null, 2);\n        } else if (error.error?.errors) {\n          errorMessage = Array.isArray(error.error.errors)\n            ? error.error.errors.join('\\n')\n            : JSON.stringify(error.error.errors, null, 2);\n        } else if (error.error?.message) {\n          errorMessage = error.error.message;\n        }\n\n        alert(errorMessage);\n      },\n    });\n  }\n\n  // ログアウト処理\n  async logout() {\n    if (confirm('ログアウトしますか？')) {\n      this.authService.logout().subscribe({\n        next: () => {\n          console.log('ログアウトしました');\n          console.log('current user after logout:', this.user);\n        },\n        error: (error) => {\n          console.error('ログアウトエラー', error);\n        },\n      });\n    }\n  }\n}\n",
             "styleUrl": "./app.component.css",
             "assetsDirs": [],
             "styleUrlsData": "",
@@ -801,7 +811,7 @@
         },
         {
             "name": "BrandCardComponent",
-            "id": "component-BrandCardComponent-c6e8b914b3f42399ab9fd8214fbd760e505b7986f811400ca1106ba877ab02159e0d8653d62ced5b63e260c8647290d932dd6aebac9c9ee34f79e163134d1d49",
+            "id": "component-BrandCardComponent-d2e4f7463cbe05eede6cab7379e62659aac7ce7dce2af2ee728b18f32f5a2b699482c7ef605bdcb79998bf2138c71b956e78d0ebde2900185606acc121b96839",
             "file": "src/app/components/brand-card/brand-card.component.ts",
             "encapsulation": [],
             "entryComponents": [],
@@ -811,13 +821,21 @@
             "selector": "app-brand-card",
             "styleUrls": [],
             "styles": [],
-            "template": "<app-card-base [title]=\"brand.name\">\n  <div class=\"space-y-2\">\n    <p class=\"text-sm text-gray-600\">{{ brand.category }}</p>\n    <p class=\"text-sm\">{{ brand.description }}</p>\n    <a\n      [href]=\"brand.url\"\n      target=\"_blank\"\n      class=\"text-blue-500 hover:underline text-sm\"\n    >\n      公式サイト →\n    </a>\n  </div>\n</app-card-base>\n",
             "templateUrl": [
                 "./brand-card.component.html"
             ],
             "viewProviders": [],
             "hostDirectives": [],
-            "inputsClass": [],
+            "inputsClass": [
+                {
+                    "name": "brand",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 11,
+                    "type": "literal type",
+                    "decorators": []
+                }
+            ],
             "outputsClass": [],
             "propertiesClass": [],
             "methodsClass": [],
@@ -839,16 +857,145 @@
             "description": "",
             "rawdescription": "\n",
             "type": "component",
-            "sourceCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { CardBaseComponent } from '../card-base/card-base.component';\n\n@Component({\n  selector: 'app-brand-card',\n  imports: [CommonModule, CardBaseComponent],\n  templateUrl: './brand-card.component.html',\n  template: `\n    <app-card-base [title]=\"brand.name\">\n      <div class=\"space-y-2\">\n        <p class=\"text-sm text-gray-600\">{{ brand.category }}</p>\n        <p class=\"text-sm\">{{ brand.description }}</p>\n        <a\n          [href]=\"brand.url\"\n          target=\"_blank\"\n          class=\"text-blue-500 hover:underline text-sm\"\n        >\n          公式サイト →\n        </a>\n      </div>\n    </app-card-base>\n  `,\n})\nexport class BrandCardComponent {}\n",
+            "sourceCode": "import { Component, Input } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { CardBaseComponent } from '../card-base/card-base.component';\n\n@Component({\n  selector: 'app-brand-card',\n  imports: [CommonModule, CardBaseComponent],\n  templateUrl: './brand-card.component.html',\n})\nexport class BrandCardComponent {\n  @Input() brand!: {\n    name: string;\n    category: string;\n    description: string;\n    url: string;\n  };\n}\n",
             "assetsDirs": [],
             "styleUrlsData": "",
             "stylesData": "",
             "extends": [],
-            "templateData": "<p>brand-card works!</p>\n"
+            "templateData": "<app-card-base [title]=\"brand.name\">\n  <div class=\"space-y-2\">\n    <p class=\"text-sm text-gray-600\">{{ brand.category }}</p>\n    <p class=\"text-sm\">{{ brand.description }}</p>\n    <a\n      [href]=\"brand.url\"\n      target=\"_blank\"\n      class=\"text-blue-500 hover:underline text-sm\"\n    >\n      公式サイト →\n    </a>\n  </div>\n</app-card-base>\n"
+        },
+        {
+            "name": "BrandInputModalComponent",
+            "id": "component-BrandInputModalComponent-7afd5e8c61cc35660def2bf8eb27f680f29482eb626aed569c5f0dd326812d822d2732793201c29798b22a96344ec33c8de9908df7bb4ab59f514e6ec673b0a9",
+            "file": "src/app/components/brand-input-modal/brand-input-modal.component.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-brand-input-modal",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./brand-input-modal.component.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [
+                {
+                    "name": "brand",
+                    "defaultValue": "{\n    name: '',\n    category: '',\n    description: '',\n    url: '',\n  }",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 14,
+                    "type": "literal type",
+                    "decorators": []
+                },
+                {
+                    "name": "isOpen",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 13,
+                    "type": "boolean",
+                    "decorators": []
+                }
+            ],
+            "outputsClass": [
+                {
+                    "name": "closeModal",
+                    "defaultValue": "new EventEmitter<void>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 26,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "submitBrand",
+                    "defaultValue": "new EventEmitter<{\n    name: string;\n    category: string;\n    description: string;\n    url: string;\n  }>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 27,
+                    "type": "EventEmitter"
+                }
+            ],
+            "propertiesClass": [],
+            "methodsClass": [
+                {
+                    "name": "close",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 34,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "onSubmit",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 38,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "resetForm",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 45,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "EditModalBaseComponent",
+                    "type": "component"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, EventEmitter, Input, Output } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { FormsModule } from '@angular/forms';\nimport { EditModalBaseComponent } from '../edit-modal-base/edit-modal-base.component';\n\n@Component({\n  selector: 'app-brand-input-modal',\n  imports: [CommonModule, FormsModule, EditModalBaseComponent],\n  templateUrl: './brand-input-modal.component.html',\n  styleUrl: './brand-input-modal.component.css',\n})\nexport class BrandInputModalComponent {\n  @Input() isOpen = false;\n  @Input() brand: {\n    name: string;\n    category: string;\n    description: string;\n    url: string;\n  } = {\n    name: '',\n    category: '',\n    description: '',\n    url: '',\n  };\n\n  @Output() closeModal = new EventEmitter<void>();\n  @Output() submitBrand = new EventEmitter<{\n    name: string;\n    category: string;\n    description: string;\n    url: string;\n  }>();\n\n  close() {\n    this.closeModal.emit();\n  }\n\n  onSubmit() {\n    if (this.brand.name && this.brand.category) {\n      this.submitBrand.emit({ ...this.brand });\n      this.resetForm();\n    }\n  }\n\n  resetForm() {\n    this.brand = {\n      name: '',\n      category: '',\n      description: '',\n      url: '',\n    };\n  }\n\n  get isValid(): boolean {\n    return !!(this.brand.name && this.brand.category);\n  }\n}\n",
+            "styleUrl": "./brand-input-modal.component.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "extends": [],
+            "accessors": {
+                "isValid": {
+                    "name": "isValid",
+                    "getSignature": {
+                        "name": "isValid",
+                        "type": "boolean",
+                        "returnType": "boolean",
+                        "line": 54
+                    }
+                }
+            },
+            "templateData": "<app-edit-modal-base\n  [isOpen]=\"isOpen\"\n  title=\"ブランド情報を入力\"\n  submitLabel=\"登録\"\n  [isSubmitDisabled]=\"!isValid\"\n  (close)=\"close()\"\n  (submit)=\"onSubmit()\"\n>\n  <form class=\"space-y-4\">\n    <div>\n      <label for=\"name\" class=\"block text-sm font-medium text-gray-700 mb-1\">\n        ブランド名 <span class=\"text-red-500\">*</span>\n      </label>\n      <input\n        type=\"text\"\n        id=\"name\"\n        [(ngModel)]=\"brand.name\"\n        name=\"name\"\n        required\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"例: ZARA\"\n      />\n    </div>\n\n    <div>\n      <label\n        for=\"category\"\n        class=\"block text-sm font-medium text-gray-700 mb-1\"\n      >\n        カテゴリ <span class=\"text-red-500\">*</span>\n      </label>\n      <input\n        type=\"text\"\n        id=\"category\"\n        [(ngModel)]=\"brand.category\"\n        name=\"category\"\n        required\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"例: ファッション\"\n      />\n    </div>\n\n    <div>\n      <label\n        for=\"description\"\n        class=\"block text-sm font-medium text-gray-700 mb-1\"\n      >\n        説明\n      </label>\n      <textarea\n        id=\"description\"\n        [(ngModel)]=\"brand.description\"\n        name=\"description\"\n        rows=\"3\"\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"ブランドの説明を入力...\"\n      ></textarea>\n    </div>\n\n    <div>\n      <label for=\"url\" class=\"block text-sm font-medium text-gray-700 mb-1\">\n        公式サイトURL\n      </label>\n      <input\n        type=\"url\"\n        id=\"url\"\n        [(ngModel)]=\"brand.url\"\n        name=\"url\"\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"https://example.com\"\n      />\n    </div>\n  </form>\n</app-edit-modal-base>\n"
         },
         {
             "name": "BrandsComponent",
-            "id": "component-BrandsComponent-58eeb6bf14a4d0064664c3099ecf832ff8d278e835920d4b2e39fe289b115c69a65f85732f06d8c0671e37845faa7d63413cbcbbd733b10fc96db95e909c7d2c",
+            "id": "component-BrandsComponent-d4cac9c56db502310c242ebfef54741c141fef74495a630f96fd30fa785d49f6de06ae9df6238ccf00065e28cda1b3dc40799107bef2233255be807e3d2f37f6",
             "file": "src/app/pages/brands/brands.component.ts",
             "encapsulation": [],
             "entryComponents": [],
@@ -1007,22 +1154,22 @@
                     "type": "component"
                 },
                 {
-                    "name": "EditModalBaseComponent",
-                    "type": "component"
-                },
-                {
                     "name": "CommonModule",
                     "type": "module"
                 },
                 {
                     "name": "CategoryTabsComponent",
                     "type": "component"
+                },
+                {
+                    "name": "BrandInputModalComponent",
+                    "type": "component"
                 }
             ],
             "description": "",
             "rawdescription": "\n",
             "type": "component",
-            "sourceCode": "import { Component } from '@angular/core';\nimport { AddButtonComponent } from '@/components/add-button/add-button.component';\nimport { EditModalBaseComponent } from '@/components/edit-modal-base/edit-modal-base.component';\nimport { FormsModule } from '@angular/forms';\nimport { CommonModule } from '@angular/common';\nimport { CategoryTabsComponent } from '@/components/category-tabs/category-tabs.component';\n\n@Component({\n  selector: 'app-brands',\n  imports: [\n    FormsModule,\n    AddButtonComponent,\n    EditModalBaseComponent,\n    CommonModule,\n    CategoryTabsComponent,\n  ],\n  templateUrl: './brands.component.html',\n  styleUrl: './brands.component.css',\n})\nexport class BrandsComponent {\n  // モーダル管理\n  isModalOpen = false;\n\n  // カテゴリーのリストを定義\n  readonly CATEGORIES = [\n    'すべて',\n    'ファッション',\n    'メイク',\n    'アクセサリー',\n    'カラコン',\n    'その他',\n  ];\n\n  // 選択中のカテゴリー\n  selectedCategory = 'すべて';\n\n  // モーダル入力用のオブジェクト\n  newBrand = {\n    name: '',\n    category: '',\n    description: '',\n    url: '',\n  };\n\n  // ブランドリスト（後でRails APIから取得）\n  brands: any[] = [];\n\n  // フィルタリングされたブランド\n  get filteredBrands(): any[] {\n    if (this.selectedCategory === 'すべて') {\n      return this.brands;\n    }\n    return this.brands.filter(\n      (brand) => brand.category === this.selectedCategory,\n    );\n  }\n\n  // 現在の選択カテゴリーを取得\n  get currentCategory(): string {\n    return this.selectedCategory;\n  }\n\n  // 子コンポーネント(タブ)から呼ばれる関数\n  onCategoryChanged(category: string) {\n    this.selectedCategory = category;\n  }\n\n  // モーダルを開く\n  openAddModal() {\n    this.newBrand = {\n      name: '',\n      category: '',\n      description: '',\n      url: '',\n    };\n    this.isModalOpen = true;\n  }\n\n  // モーダルを閉じる\n  handleClose() {\n    this.isModalOpen = false;\n  }\n\n  // モーダルのカテゴリーオプション\n  get modalCategoryOptions() {\n    return this.CATEGORIES.filter((c) => c !== 'すべて');\n  }\n\n  // 保存処理（後でRails APIと連携）\n  async saveBrand() {\n    if (this.newBrand.name.trim()) {\n      // TODO: Rails APIにPOSTリクエストを送信\n      console.log('ブランド保存:', this.newBrand);\n\n      // 仮のローカル追加\n      this.brands.unshift({\n        id: Date.now(),\n        ...this.newBrand,\n        createdAt: new Date(),\n      });\n\n      this.isModalOpen = false;\n      this.newBrand = {\n        name: '',\n        category: 'ファッション',\n        description: '',\n        url: '',\n      };\n    }\n  }\n}\n",
+            "sourceCode": "import { Component } from '@angular/core';\nimport { AddButtonComponent } from '@/components/add-button/add-button.component';\nimport { FormsModule } from '@angular/forms';\nimport { CommonModule } from '@angular/common';\nimport { CategoryTabsComponent } from '@/components/category-tabs/category-tabs.component';\nimport { BrandInputModalComponent } from \"@/components/brand-input-modal/brand-input-modal.component\";\n\n@Component({\n  selector: 'app-brands',\n  imports: [\n    FormsModule,\n    AddButtonComponent,\n    CommonModule,\n    CategoryTabsComponent,\n    BrandInputModalComponent\n],\n  templateUrl: './brands.component.html',\n  styleUrl: './brands.component.css',\n})\nexport class BrandsComponent {\n  // モーダル管理\n  isModalOpen = false;\n\n  // カテゴリーのリストを定義\n  readonly CATEGORIES = [\n    'すべて',\n    'ファッション',\n    'メイク',\n    'アクセサリー',\n    'カラコン',\n    'その他',\n  ];\n\n  // 選択中のカテゴリー\n  selectedCategory = 'すべて';\n\n  // モーダル入力用のオブジェクト\n  newBrand = {\n    name: '',\n    category: '',\n    description: '',\n    url: '',\n  };\n\n  // ブランドリスト（後でRails APIから取得）\n  brands: any[] = [];\n\n  // フィルタリングされたブランド\n  get filteredBrands(): any[] {\n    if (this.selectedCategory === 'すべて') {\n      return this.brands;\n    }\n    return this.brands.filter(\n      (brand) => brand.category === this.selectedCategory,\n    );\n  }\n\n  // 現在の選択カテゴリーを取得\n  get currentCategory(): string {\n    return this.selectedCategory;\n  }\n\n  // 子コンポーネント(タブ)から呼ばれる関数\n  onCategoryChanged(category: string) {\n    this.selectedCategory = category;\n  }\n\n  // モーダルを開く\n  openAddModal() {\n    this.newBrand = {\n      name: '',\n      category: '',\n      description: '',\n      url: '',\n    };\n    this.isModalOpen = true;\n  }\n\n  // モーダルを閉じる\n  handleClose() {\n    this.isModalOpen = false;\n  }\n\n  // モーダルのカテゴリーオプション\n  get modalCategoryOptions() {\n    return this.CATEGORIES.filter((c) => c !== 'すべて');\n  }\n\n  // 保存処理（後でRails APIと連携）\n  async saveBrand() {\n    if (this.newBrand.name.trim()) {\n      // TODO: Rails APIにPOSTリクエストを送信\n      console.log('ブランド保存:', this.newBrand);\n\n      // 仮のローカル追加\n      this.brands.unshift({\n        id: Date.now(),\n        ...this.newBrand,\n        createdAt: new Date(),\n      });\n\n      this.isModalOpen = false;\n      this.newBrand = {\n        name: '',\n        category: 'ファッション',\n        description: '',\n        url: '',\n      };\n    }\n  }\n}\n",
             "styleUrl": "./brands.component.css",
             "assetsDirs": [],
             "styleUrlsData": "",
@@ -1057,7 +1204,7 @@
                     }
                 }
             },
-            "templateData": "<app-category-tabs\n  [selectedCategory]=\"currentCategory\"\n  (categoryChange)=\"onCategoryChanged($event)\"\n>\n</app-category-tabs>\n<!-- 追加ボタン -->\n<app-add-button\n  class=\"flex justify-end mb-4\"\n  label=\"ブランドを追加\"\n  (btnClick)=\"openAddModal()\"\n>\n</app-add-button>\n<!-- ブランド一覧をグリッド表示 -->\n<div class=\"grid grid-cols-1 md:grid-cols-2 gap-4 mt-4\">\n  @for (brand of filteredBrands; track brand.id) {\n  <div class=\"border p-4 rounded-xl shadow-sm bg-white\">\n    <div class=\"flex justify-between items-start mb-2\">\n      <h2 class=\"font-bold text-lg\">{{ brand.name }}</h2>\n      <span class=\"text-xs px-2 py-1 bg-gray-100 rounded\">{{\n        brand.category\n      }}</span>\n    </div>\n    <p class=\"text-sm text-gray-600 mb-4\">{{ brand.description }}</p>\n    @if (brand.url) {\n    <a\n      [href]=\"brand.url\"\n      target=\"_blank\"\n      class=\"text-blue-500 text-xs hover:underline\"\n    >\n      公式サイト →\n    </a>\n    }\n  </div>\n  } @empty {\n  <div class=\"col-span-2 py-20 text-center text-gray-400\">\n    該当するブランドがありません。\n  </div>\n  }\n</div>\n<!-- ブランド情報入力モーダル -->\n<app-edit-modal-base\n  [isOpen]=\"isModalOpen\"\n  title=\"ブランド追加\"\n  (submit)=\"saveBrand()\"\n  (close)=\"isModalOpen = false\"\n>\n  <div class=\"space-y-4 mt-4\">\n    <div>\n      <label class=\"block text-sm font-medium text-gray-700\">ブランド名</label>\n      <input\n        type=\"text\"\n        [(ngModel)]=\"newBrand.name\"\n        class=\"w-full border p-2 rounded-lg mt-1\"\n        placeholder=\"例: Nike\"\n      />\n    </div>\n\n    <div>\n      <label class=\"block text-sm font-medium text-gray-700\">カテゴリー</label>\n      <select\n        [(ngModel)]=\"newBrand.category\"\n        name=\"brandCategory\"\n        class=\"w-full border p-2 rounded-lg mt-1 bg-white\"\n      >\n        @for (option of modalCategoryOptions; track option) {\n        <option [value]=\"option\">{{ option }}</option>\n        }\n      </select>\n    </div>\n\n    <div>\n      <label class=\"block text-sm font-medium text-gray-700\">説明</label>\n      <textarea\n        [(ngModel)]=\"newBrand.description\"\n        class=\"w-full border p-2 rounded-lg mt-1\"\n        rows=\"3\"\n        placeholder=\"ブランドの詳細を入力\"\n      ></textarea>\n    </div>\n\n    <div>\n      <label class=\"block text-sm font-medium text-gray-700\"\n        >ウェブサイトURL</label\n      >\n      <input\n        type=\"url\"\n        [(ngModel)]=\"newBrand.url\"\n        class=\"w-full border p-2 rounded-lg mt-1\"\n        placeholder=\"https://example.com\"\n      />\n    </div>\n  </div>\n</app-edit-modal-base>\n"
+            "templateData": "<app-category-tabs\n  [selectedCategory]=\"currentCategory\"\n  (categoryChange)=\"onCategoryChanged($event)\"\n>\n</app-category-tabs>\n<!-- 追加ボタン -->\n<app-add-button\n  class=\"flex justify-end mb-4\"\n  label=\"ブランドを追加\"\n  (btnClick)=\"openAddModal()\"\n>\n</app-add-button>\n<!-- ブランド一覧をグリッド表示 -->\n<div class=\"grid grid-cols-1 md:grid-cols-2 gap-4 mt-4\">\n  @for (brand of filteredBrands; track brand.id) {\n  <div class=\"border p-4 rounded-xl shadow-sm bg-white\">\n    <div class=\"flex justify-between items-start mb-2\">\n      <h2 class=\"font-bold text-lg\">{{ brand.name }}</h2>\n      <span class=\"text-xs px-2 py-1 bg-gray-100 rounded\">{{\n        brand.category\n      }}</span>\n    </div>\n    <p class=\"text-sm text-gray-600 mb-4\">{{ brand.description }}</p>\n    @if (brand.url) {\n    <a\n      [href]=\"brand.url\"\n      target=\"_blank\"\n      class=\"text-blue-500 text-xs hover:underline\"\n    >\n      公式サイト →\n    </a>\n    }\n  </div>\n  } @empty {\n  <div class=\"col-span-2 py-20 text-center text-gray-400\">\n    該当するブランドがありません。\n  </div>\n  }\n</div>\n<!-- ブランド情報入力モーダル -->\n <app-brand-input-modal></app-brand-input-modal>\n\n"
         },
         {
             "name": "ButtonComponent",
@@ -1492,6 +1639,191 @@
             "stylesData": "",
             "extends": [],
             "templateData": "@if (isOpen) {\n<div\n  (click)=\"onClose()\"\n  class=\"fixed inset-0 bg-black/50 flex items-center justify-center z-50 transition-opacity\"\n>\n  <div\n    (click)=\"$event.stopPropagation()\"\n    class=\"bg-white p-6 rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all\"\n  >\n    <h2 class=\"text-xl font-bold mb-4 text-gray-800\">{{ title }}</h2>\n\n    <div class=\"space-y-4\">\n      <ng-content></ng-content>\n    </div>\n\n    <div class=\"flex justify-end space-x-3 mt-6\">\n      <button\n        (click)=\"onClose()\"\n        class=\"px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition font-medium\"\n      >\n        キャンセル\n      </button>\n      <button\n        (click)=\"onSubmit()\"\n        [disabled]=\"isSubmitDisabled\"\n        [class.opacity-50]=\"isSubmitDisabled\"\n        class=\"px-4 py-2 bg-daidai text-white rounded-lg font-bold hover:bg-opacity-90 transition shadow-sm\"\n      >\n        {{ submitLabel }}\n      </button>\n    </div>\n  </div>\n</div>\n}\n"
+        },
+        {
+            "name": "FavoriteItemCardComponent",
+            "id": "component-FavoriteItemCardComponent-ce70f0c20cac30a578220a42cd4898b7164a5a3c39b1c4a0ca772eb1c3fa75cbaa9187d1519a947418940a22e35b64b3242e84fff46a183c4390020d6228e509",
+            "file": "src/app/components/favorite-item-card/favorite-item-card.component.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-favorite-item-card",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./favorite-item-card.component.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [
+                {
+                    "name": "item",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 12,
+                    "type": "literal type",
+                    "decorators": []
+                }
+            ],
+            "outputsClass": [],
+            "propertiesClass": [],
+            "methodsClass": [],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "CardBaseComponent",
+                    "type": "component"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, Input } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { CardBaseComponent } from '../card-base/card-base.component';\n\n@Component({\n  selector: 'app-favorite-item-card',\n  imports: [CommonModule, CardBaseComponent],\n  templateUrl: './favorite-item-card.component.html',\n  styleUrl: './favorite-item-card.component.css',\n})\nexport class FavoriteItemCardComponent {\n  @Input() item!: {\n    itemName: string;\n    brandName: string;\n    category: string;\n    price?: number;\n    memo?: string;\n    url?: string;\n  };\n}\n",
+            "styleUrl": "./favorite-item-card.component.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "extends": [],
+            "templateData": "<app-card-base [title]=\"item.itemName\">\n  <div class=\"space-y-2\">\n    <span\n      class=\"text-xs font-semibold px-2 py-1 bg-pink-50 rounded text-pink-600\"\n    >\n      {{ item.brandName }}\n    </span>\n    <span class=\"text-xs bg-gray-100 px-2 py-1 rounded\">{{\n      item.category\n    }}</span>\n\n    @if (item.price) {\n      <p class=\"text-sm font-bold text-gray-900\">¥{{ item.price | number }}</p>\n    }\n    <p class=\"text-sm text-gray-600 line-clamp-3\">\n      {{ item.memo }}\n    </p>\n    @if (item.url) {\n      <a\n        [href]=\"item.url\"\n        target=\"_blank\"\n        class=\"text-blue-500 text-xs hover:underline block pt-2\"\n      >\n        商品リンク →\n      </a>\n    }\n  </div>\n</app-card-base>\n"
+        },
+        {
+            "name": "FavoriteItemInputModalComponent",
+            "id": "component-FavoriteItemInputModalComponent-2e68de48d99f259deac4aeff354afed27b8b0a5869013c5a021196f8009214c044ccea63c10e5afc0d08f072a4724239de992f6d903135c2bd18eac21ae78aeb",
+            "file": "src/app/components/favorite-item-input-modal/favorite-item-input-modal.component.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-favorite-item-input-modal",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./favorite-item-input-modal.component.html"
+            ],
+            "viewProviders": [],
+            "hostDirectives": [],
+            "inputsClass": [
+                {
+                    "name": "isOpen",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 13,
+                    "type": "boolean",
+                    "decorators": []
+                },
+                {
+                    "name": "item",
+                    "defaultValue": "{\n    itemName: '',\n    brandName: '',\n    category: '',\n    price: undefined,\n    memo: '',\n    url: '',\n  }",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 14,
+                    "type": "literal type",
+                    "decorators": []
+                }
+            ],
+            "outputsClass": [
+                {
+                    "name": "closeModal",
+                    "defaultValue": "new EventEmitter<void>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 30,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "submitItem",
+                    "defaultValue": "new EventEmitter<{\n    itemName: string;\n    brandName: string;\n    category: string;\n    price?: number;\n    memo?: string;\n    url?: string;\n  }>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 31,
+                    "type": "EventEmitter"
+                }
+            ],
+            "propertiesClass": [],
+            "methodsClass": [
+                {
+                    "name": "close",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 40,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "onSubmit",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 44,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                },
+                {
+                    "name": "resetForm",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 51,
+                    "deprecated": false,
+                    "deprecationMessage": ""
+                }
+            ],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "standalone": false,
+            "imports": [
+                {
+                    "name": "CommonModule",
+                    "type": "module"
+                },
+                {
+                    "name": "FormsModule",
+                    "type": "module"
+                },
+                {
+                    "name": "EditModalBaseComponent",
+                    "type": "component"
+                }
+            ],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component, EventEmitter, Input, Output } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { FormsModule } from '@angular/forms';\nimport { EditModalBaseComponent } from '../edit-modal-base/edit-modal-base.component';\n\n@Component({\n  selector: 'app-favorite-item-input-modal',\n  imports: [CommonModule, FormsModule, EditModalBaseComponent],\n  templateUrl: './favorite-item-input-modal.component.html',\n  styleUrl: './favorite-item-input-modal.component.css',\n})\nexport class FavoriteItemInputModalComponent {\n  @Input() isOpen = false;\n  @Input() item: {\n    itemName: string;\n    brandName: string;\n    category: string;\n    price?: number;\n    memo?: string;\n    url?: string;\n  } = {\n    itemName: '',\n    brandName: '',\n    category: '',\n    price: undefined,\n    memo: '',\n    url: '',\n  };\n\n  @Output() closeModal = new EventEmitter<void>();\n  @Output() submitItem = new EventEmitter<{\n    itemName: string;\n    brandName: string;\n    category: string;\n    price?: number;\n    memo?: string;\n    url?: string;\n  }>();\n\n  close() {\n    this.closeModal.emit();\n  }\n\n  onSubmit() {\n    if (this.item.itemName && this.item.brandName && this.item.category) {\n      this.submitItem.emit({ ...this.item });\n      this.resetForm();\n    }\n  }\n\n  resetForm() {\n    this.item = {\n      itemName: '',\n      brandName: '',\n      category: '',\n      price: undefined,\n      memo: '',\n      url: '',\n    };\n  }\n\n  get isValid(): boolean {\n    return !!(this.item.itemName && this.item.brandName && this.item.category);\n  }\n}\n",
+            "styleUrl": "./favorite-item-input-modal.component.css",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "extends": [],
+            "accessors": {
+                "isValid": {
+                    "name": "isValid",
+                    "getSignature": {
+                        "name": "isValid",
+                        "type": "boolean",
+                        "returnType": "boolean",
+                        "line": 62
+                    }
+                }
+            },
+            "templateData": "<app-edit-modal-base\n  [isOpen]=\"isOpen\"\n  title=\"お気に入り商品を追加\"\n  submitLabel=\"追加\"\n  [isSubmitDisabled]=\"!isValid\"\n  (close)=\"close()\"\n  (submit)=\"onSubmit()\"\n>\n  <form class=\"space-y-4\">\n    <div>\n      <label\n        for=\"itemName\"\n        class=\"block text-sm font-medium text-gray-700 mb-1\"\n      >\n        商品名 <span class=\"text-red-500\">*</span>\n      </label>\n      <input\n        type=\"text\"\n        id=\"itemName\"\n        [(ngModel)]=\"item.itemName\"\n        name=\"itemName\"\n        required\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"例: ストライプシャツ\"\n      />\n    </div>\n\n    <div>\n      <label\n        for=\"brandName\"\n        class=\"block text-sm font-medium text-gray-700 mb-1\"\n      >\n        ブランド名 <span class=\"text-red-500\">*</span>\n      </label>\n      <input\n        type=\"text\"\n        id=\"brandName\"\n        [(ngModel)]=\"item.brandName\"\n        name=\"brandName\"\n        required\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"例: ZARA\"\n      />\n    </div>\n\n    <div>\n      <label\n        for=\"category\"\n        class=\"block text-sm font-medium text-gray-700 mb-1\"\n      >\n        カテゴリ <span class=\"text-red-500\">*</span>\n      </label>\n      <input\n        type=\"text\"\n        id=\"category\"\n        [(ngModel)]=\"item.category\"\n        name=\"category\"\n        required\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"例: トップス\"\n      />\n    </div>\n\n    <div>\n      <label for=\"price\" class=\"block text-sm font-medium text-gray-700 mb-1\">\n        価格（円）\n      </label>\n      <input\n        type=\"number\"\n        id=\"price\"\n        [(ngModel)]=\"item.price\"\n        name=\"price\"\n        min=\"0\"\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"4990\"\n      />\n    </div>\n\n    <div>\n      <label for=\"memo\" class=\"block text-sm font-medium text-gray-700 mb-1\">\n        メモ\n      </label>\n      <textarea\n        id=\"memo\"\n        [(ngModel)]=\"item.memo\"\n        name=\"memo\"\n        rows=\"3\"\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"商品についてのメモ...\"\n      ></textarea>\n    </div>\n\n    <div>\n      <label for=\"url\" class=\"block text-sm font-medium text-gray-700 mb-1\">\n        商品URL\n      </label>\n      <input\n        type=\"url\"\n        id=\"url\"\n        [(ngModel)]=\"item.url\"\n        name=\"url\"\n        class=\"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500\"\n        placeholder=\"https://example.com/item/12345\"\n      />\n    </div>\n  </form>\n</app-edit-modal-base>\n"
         },
         {
             "name": "FavoritesComponent",
@@ -2437,7 +2769,17 @@
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "ApplicationConfig",
-                "defaultValue": "{\n  providers: [\n    provideZoneChangeDetection({ eventCoalescing: true }),\n    provideRouter(routes),\n    provideHttpClient(), // HttpClientを提供\n  ],\n}"
+                "defaultValue": "{\n  providers: [\n    provideZoneChangeDetection({ eventCoalescing: true }),\n    provideRouter(routes),\n    provideHttpClient(\n      withInterceptors([authInterceptor]) // 認証インターセプターを追加\n    ),\n  ],\n}"
+            },
+            {
+                "name": "authInterceptor",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/app/interceptors/auth.interceptor.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "HttpInterceptorFn",
+                "defaultValue": "(req, next) => {\n  const platformId = inject(PLATFORM_ID);\n  \n  // ブラウザ環境でのみトークンを取得\n  if (isPlatformBrowser(platformId)) {\n    const token = localStorage.getItem('authToken');\n    \n    if (token) {\n      // トークンがある場合、Authorizationヘッダーを追加\n      const clonedRequest = req.clone({\n        setHeaders: {\n          Authorization: `Bearer ${token}`\n        }\n      });\n      return next(clonedRequest);\n    }\n  }\n  \n  return next(req);\n}"
             },
             {
                 "name": "bootstrap",
@@ -2585,7 +2927,19 @@
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "ApplicationConfig",
-                    "defaultValue": "{\n  providers: [\n    provideZoneChangeDetection({ eventCoalescing: true }),\n    provideRouter(routes),\n    provideHttpClient(), // HttpClientを提供\n  ],\n}"
+                    "defaultValue": "{\n  providers: [\n    provideZoneChangeDetection({ eventCoalescing: true }),\n    provideRouter(routes),\n    provideHttpClient(\n      withInterceptors([authInterceptor]) // 認証インターセプターを追加\n    ),\n  ],\n}"
+                }
+            ],
+            "src/app/interceptors/auth.interceptor.ts": [
+                {
+                    "name": "authInterceptor",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/app/interceptors/auth.interceptor.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "HttpInterceptorFn",
+                    "defaultValue": "(req, next) => {\n  const platformId = inject(PLATFORM_ID);\n  \n  // ブラウザ環境でのみトークンを取得\n  if (isPlatformBrowser(platformId)) {\n    const token = localStorage.getItem('authToken');\n    \n    if (token) {\n      // トークンがある場合、Authorizationヘッダーを追加\n      const clonedRequest = req.clone({\n        setHeaders: {\n          Authorization: `Bearer ${token}`\n        }\n      });\n      return next(clonedRequest);\n    }\n  }\n  \n  return next(req);\n}"
                 }
             ],
             "src/main.server.ts": [
@@ -2740,7 +3094,16 @@
                 "linktype": "component",
                 "name": "BrandCardComponent",
                 "coveragePercent": 0,
-                "coverageCount": "0/1",
+                "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/brand-input-modal/brand-input-modal.component.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "BrandInputModalComponent",
+                "coveragePercent": 0,
+                "coverageCount": "0/8",
                 "status": "low"
             },
             {
@@ -2771,6 +3134,24 @@
                 "status": "low"
             },
             {
+                "filePath": "src/app/components/favorite-item-card/favorite-item-card.component.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "FavoriteItemCardComponent",
+                "coveragePercent": 0,
+                "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/components/favorite-item-input-modal/favorite-item-input-modal.component.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "FavoriteItemInputModalComponent",
+                "coveragePercent": 0,
+                "coverageCount": "0/8",
+                "status": "low"
+            },
+            {
                 "filePath": "src/app/components/login-modal/login-modal.component.ts",
                 "type": "component",
                 "linktype": "component",
@@ -2786,6 +3167,16 @@
                 "name": "RegisterModalComponent",
                 "coveragePercent": 0,
                 "coverageCount": "0/12",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/interceptors/auth.interceptor.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "authInterceptor",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
@@ -2830,7 +3221,7 @@
                 "linktype": "injectable",
                 "name": "AuthService",
                 "coveragePercent": 0,
-                "coverageCount": "0/13",
+                "coverageCount": "0/14",
                 "status": "low"
             },
             {
