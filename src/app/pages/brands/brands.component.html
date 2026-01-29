@@ -12,6 +12,12 @@
 </app-add-button>
 <!-- ブランド一覧をグリッド表示 -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+  @for (brand of filteredBrands; track brand) {
+  <app-brand-card [brand]="brand"></app-brand-card>
+  }
+</div>
+
+<!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
   @for (brand of filteredBrands; track brand.id) {
   <div class="border p-4 rounded-xl shadow-sm bg-white">
     <div class="flex justify-between items-start mb-2">
@@ -36,9 +42,14 @@
     該当するブランドがありません。
   </div>
   }
-</div>
+</div> -->
 <!-- ブランド情報入力モーダル -->
-<app-edit-modal-base
+<app-brand-input-modal
+  [isOpen]="isModalOpen"
+  (closeModal)="closeModal()"
+  (submitBrand)="submitBrand($event)"
+></app-brand-input-modal>
+<!-- <app-edit-modal-base
   [isOpen]="isModalOpen"
   title="ブランド追加"
   (submit)="saveBrand()"
@@ -90,4 +101,4 @@
       />
     </div>
   </div>
-</app-edit-modal-base>
+</app-edit-modal-base> -->
