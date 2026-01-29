@@ -38,6 +38,7 @@ export class AppComponent implements OnInit {
     // ユーザー状態を購読
     this.authService.currentUser$.subscribe((user) => {
       this.user = user;
+      console.log('currentUser updated:', user);
     });
   }
 
@@ -140,7 +141,8 @@ export class AppComponent implements OnInit {
     if (confirm('ログアウトしますか？')) {
       this.authService.logout().subscribe({
         next: () => {
-          console.log('ログアウト成功');
+          console.log('ログアウトしました');
+          console.log('current user after logout:', this.user);
         },
         error: (error) => {
           console.error('ログアウトエラー', error);
