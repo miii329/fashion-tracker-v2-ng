@@ -53,13 +53,24 @@ export class AuthService {
         },
       })
       .pipe(
-        tap((response) => {
+        tap((response: any) => {
           // ブラウザ環境でのみトークンとユーザー情報を保存
           if (this.isBrowser) {
-            localStorage.setItem('authToken', response.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            // RailsからauthTokenを取得
+            const token = response.authToken || response.token;
+            const user = response.user || response;
+            
+            if (token) {
+              localStorage.setItem('authToken', token);
+              console.log('✅ authToken saved:', token.substring(0, 20) + '...');
+            }
+            
+            if (user) {
+              localStorage.setItem('currentUser', JSON.stringify(user));
+              console.log('✅ User saved:', user.email_address || user.email);
+            }
           }
-          this.currentUserSubject.next(response.user);
+          this.currentUserSubject.next(response.user || response);
         }),
       );
   }
@@ -73,22 +84,33 @@ export class AuthService {
       .post<AuthResponse>(`${this.apiUrl}/session`, {
         email_address: credentials.email,
         password: credentials.password,
-      }, { withCredentials: true })
+      }, {})
       .pipe(
-        tap((response) => {
+        tap((response: any) => {
           // ブラウザ環境でのみトークンとユーザー情報を保存
           if (this.isBrowser) {
-            localStorage.setItem('authToken', response.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            // RailsからauthTokenを取得
+            const token = response.authToken || response.token;
+            const user = response.user || response;
+            
+            if (token) {
+              localStorage.setItem('authToken', token);
+              console.log('✅ authToken saved:', token.substring(0, 20) + '...');
+            }
+            
+            if (user) {
+              localStorage.setItem('currentUser', JSON.stringify(user));
+              console.log('✅ User saved:', user.email_address || user.email);
+            }
           }
-          this.currentUserSubject.next(response.user);
+          this.currentUserSubject.next(response.user || response);
         }),
       );
   }
 
   // ログアウト
   logout(): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/session`, { withCredentials: true }).pipe(
+    return this.http.delete(`${this.apiUrl}/session`, {}).pipe(
       tap(() => {
         // ブラウザ環境でのみローカルストレージをクリア
         if (this.isBrowser) {
