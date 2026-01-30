@@ -24,35 +24,17 @@ export class BrandService {
 
   constructor(private http: HttpClient) {}
 
-  // 認証トークンを取得
-  private getAuthHeaders(): HttpHeaders {
-    let headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
-
-    if (this.isBrowser) {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        headers = headers.set('Authorization', `Bearer ${token}`);
-      }
-    }
-
-    return headers;
-  }
-
   // 全ブランドを取得
   getBrands(): Observable<Brand[]> {
     return this.http.get<Brand[]>(`${this.apiUrl}/brands`, {
-      headers: this.getAuthHeaders(),
-      withCredentials: true,
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 
   // 特定のブランドを取得
   getBrand(id: number): Observable<Brand> {
     return this.http.get<Brand>(`${this.apiUrl}/brands/${id}`, {
-      headers: this.getAuthHeaders(),
-      withCredentials: true,
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 
@@ -67,8 +49,7 @@ export class BrandService {
         url: brand.url
       },
       {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
       }
     );
   }
@@ -84,8 +65,7 @@ export class BrandService {
         url: brand.url
       },
       {
-        headers: this.getAuthHeaders(),
-        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
       }
     );
   }
@@ -93,8 +73,7 @@ export class BrandService {
   // ブランドを削除
   deleteBrand(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/brands/${id}`, {
-      headers: this.getAuthHeaders(),
-      withCredentials: true,
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
