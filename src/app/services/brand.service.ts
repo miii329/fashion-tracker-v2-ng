@@ -2,6 +2,7 @@ import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Brand {
   id?: number;
@@ -17,7 +18,7 @@ export interface Brand {
   providedIn: 'root',
 })
 export class BrandService {
-  private apiUrl = 'http://localhost:3000/api/v2'; // Rails APIのURL
+  private apiUrl = environment.apiUrl; // 環境変数からAPI URLを取得
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
