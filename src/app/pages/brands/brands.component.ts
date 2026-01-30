@@ -56,6 +56,11 @@ export class BrandsComponent implements OnInit {
 
   // ブランドデータをAPIから取得
   loadBrands() {
+    const token = this.authService.getToken();
+    console.log('Token exists:', !!token);
+    console.log('Token value:', token?.substring(0, 20) + '...');
+    console.log('Is logged in:', this.authService.isLoggedIn());
+    
     // ログインしている場合のみユーザーのブランドを取得
     if (this.authService.isLoggedIn()) {
       this.brandService.getBrands().subscribe({
@@ -65,6 +70,12 @@ export class BrandsComponent implements OnInit {
         },
         error: (error) => {
           console.error('ユーザーブランドデータ読み込みエラー:', error);
+          
+          // 401エラーの場合は認証情報をクリア
+          if (error.status === 401) {
+            console.log('認証エラー: トークンをクリアして再ログインが必要です');
+            this.authService.clearUserState();
+          }
         }
       });
     } else {

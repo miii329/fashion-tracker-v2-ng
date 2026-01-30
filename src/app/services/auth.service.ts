@@ -75,13 +75,22 @@ export class AuthService {
         password: credentials.password,
       }, { withCredentials: true })
       .pipe(
-        tap((response) => {
+        tap((response: any) => {
+          console.log('Login response:', response);
+          
           // ブラウザ環境でのみトークンとユーザー情報を保存
           if (this.isBrowser) {
-            localStorage.setItem('authToken', response.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            // Rails APIがトークンを返さない場合はユーザー情報から緊急トークンを作成
+            const user = response.user || response;
+            const token = response.token || `emergency_${user.id}_${Date.now()}`;
+            
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            console.log('Token saved:', token.substring(0, 20) + '...');
+            console.log('User saved:', user.email_address);
           }
-          this.currentUserSubject.next(response.user);
+          this.currentUserSubject.next(response.user || response);
         }),
       );
   }
