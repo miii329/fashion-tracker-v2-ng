@@ -48,7 +48,13 @@
   }
 </div>
 <!-- お気に入り商品入力モーダル -->
-<app-edit-modal-base
+<app-favorite-item-input-modal
+  [isOpen]="isModalOpen"
+  [item]="newItem"
+  (closeModal)="closeModal()"
+  (submitItem)="submitItem($event)"
+></app-favorite-item-input-modal>
+<!-- <app-edit-modal-base
   [isOpen]="isModalOpen"
   title="商品を追加 ✨"
   (submit)="saveItem()"
@@ -127,4 +133,4 @@
       ></textarea>
     </div>
   </div>
-</app-edit-modal-base>
+</app-edit-modal-base> -->

@@ -1,34 +1,26 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AddButtonComponent } from '@/components/add-button/add-button.component';
-import { EditModalBaseComponent } from '@/components/edit-modal-base/edit-modal-base.component';
 import { CardBaseComponent } from '@/components/card-base/card-base.component';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { CategoryTabsComponent } from '@/components/category-tabs/category-tabs.component';
-
-interface FavoriteItem {
-  brandName: string;
-  itemName: string;
-  url: string;
-  price: number | null;
-  memo: string;
-  category?: string;
-}
+import { FavoriteItemInputModalComponent } from "@/components/favorite-item-input-modal/favorite-item-input-modal.component";
+import { FavoriteItemService, FavoriteItem } from '@/services/favorite-item.service';
 
 @Component({
   selector: 'app-favorites',
   imports: [
     AddButtonComponent,
-    EditModalBaseComponent,
     CardBaseComponent,
     FormsModule,
     CommonModule,
     CategoryTabsComponent,
-  ],
+    FavoriteItemInputModalComponent
+],
   templateUrl: './favorites.component.html',
   styleUrl: './favorites.component.css',
 })
-export class FavoritesComponent {
+export class FavoritesComponent implements OnInit {
   // モーダル管理
   isModalOpen = false;
   
@@ -46,13 +38,32 @@ export class FavoritesComponent {
   selectedCategory = 'すべて';
   
   // 新規アイテム
-  newItem = this.getEmptyItem() as FavoriteItem;
+  newItem = this.getEmptyItem();
   
-  // お気に入りリスト（後でRails APIから取得）
-  favorites: any[] = [];
+  // お気に入りリスト
+  favorites: FavoriteItem[] = [];
   
   // ブランド名の選択肢（後でRails APIから取得）
   existingBrandNames: string[] = [];
+
+  constructor(private favoriteItemService: FavoriteItemService) {}
+
+  ngOnInit() {
+    this.loadFavoriteItems();
+  }
+
+  // お気に入りアイテムを読み込み
+  loadFavoriteItems() {
+    this.favoriteItemService.getFavoriteItems().subscribe({
+      next: (items) => {
+        this.favorites = items;
+        console.log('お気に入りアイテムを読み込みました:', items);
+      },
+      error: (error) => {
+        console.error('お気に入りアイテム読み込みエラー:', error);
+      }
+    });
+  }
   
   // 現在のカテゴリーを取得
   get currentCategory(): string {
@@ -60,7 +71,7 @@ export class FavoritesComponent {
   }
   
   // フィルタリングされたお気に入り
-  get filteredFavorites(): any[] {
+  get filteredFavorites(): FavoriteItem[] {
     if (this.selectedCategory === 'すべて') {
       return this.favorites;
     }
@@ -78,12 +89,12 @@ export class FavoritesComponent {
   }
   
   // 空のアイテムを作成
-  private getEmptyItem(): FavoriteItem {
+  private getEmptyItem(): Omit<FavoriteItem, 'id' | 'createdAt' | 'updatedAt'> {
     return {
       brandName: '',
       itemName: '',
       url: '',
-      price: null,
+      price: undefined,
       memo: '',
       category: 'ファッション',
     };
@@ -96,28 +107,29 @@ export class FavoritesComponent {
   }
   
   // モーダルを閉じる
-  handleClose() {
+  closeModal() {
     this.isModalOpen = false;
   }
   
-  // 保存処理（後でRails APIと連携）
-  async saveItem() {
-    if (!this.newItem.brandName.trim() || !this.newItem.itemName.trim()) {
-      alert('ブランド名と商品名は必須です');
-      return;
+  // アイテムを送信（DBに保存）
+  async submitItem(item: Omit<FavoriteItem, 'id' | 'createdAt' | 'updatedAt'>) {
+    try {
+      console.log('アイテム保存:', item);
+      
+      // Rails APIにPOSTリクエストを送信
+      const savedItem = await this.favoriteItemService.createFavoriteItem(item).toPromise();
+      
+      if (savedItem) {
+        // ローカルリストに追加
+        this.favorites.unshift(savedItem);
+        console.log('アイテムを保存しました:', savedItem);
+      }
+      
+      this.isModalOpen = false;
+      this.newItem = this.getEmptyItem();
+    } catch (error) {
+      console.error('アイテム保存エラー:', error);
+      alert('アイテムの保存に失敗しました。もう一度お試しください。');
     }
-    
-    // TODO: Rails APIにPOSTリクエストを送信
-    console.log('アイテム保存:', this.newItem);
-    
-    // 仮のローカル追加
-    this.favorites.unshift({
-      id: Date.now(),
-      ...this.newItem,
-      createdAt: new Date(),
-    });
-    
-    this.isModalOpen = false;
-    this.newItem = this.getEmptyItem();
   }
 }

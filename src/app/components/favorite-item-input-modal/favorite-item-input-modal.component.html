@@ -32,15 +32,24 @@
       >
         ブランド名 <span class="text-red-500">*</span>
       </label>
-      <input
-        type="text"
-        id="brandName"
-        [(ngModel)]="item.brandName"
-        name="brandName"
-        required
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="例: ZARA"
-      />
+      @if (isLoadingBrands) {
+        <div class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+          読み込み中...
+        </div>
+      } @else {
+        <select
+          id="brandName"
+          [(ngModel)]="item.brandName"
+          name="brandName"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        >
+          <option value="">選択してください</option>
+          @for (brand of brands; track brand.id) {
+          <option [value]="brand.name">{{ brand.name }}</option>
+          }
+        </select>
+      }
     </div>
 
     <div>
@@ -50,15 +59,18 @@
       >
         カテゴリ <span class="text-red-500">*</span>
       </label>
-      <input
-        type="text"
+      <select
         id="category"
         [(ngModel)]="item.category"
         name="category"
         required
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="例: トップス"
-      />
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      >
+        <option value="">選択してください</option>
+        @for (category of categories; track category) {
+        <option [value]="category">{{ category }}</option>
+        }
+      </select>
     </div>
 
     <div>

@@ -3,6 +3,7 @@
   (categoryChange)="onCategoryChanged($event)"
 >
 </app-category-tabs>
+
 <!-- 追加ボタン -->
 <app-add-button
   class="flex justify-end mb-4"
@@ -10,6 +11,7 @@
   (btnClick)="openAddModal()"
 >
 </app-add-button>
+
 <!-- ブランド一覧をグリッド表示 -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
   @for (brand of filteredBrands; track brand) {
@@ -17,88 +19,9 @@
   }
 </div>
 
-<!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-  @for (brand of filteredBrands; track brand.id) {
-  <div class="border p-4 rounded-xl shadow-sm bg-white">
-    <div class="flex justify-between items-start mb-2">
-      <h2 class="font-bold text-lg">{{ brand.name }}</h2>
-      <span class="text-xs px-2 py-1 bg-gray-100 rounded">{{
-        brand.category
-      }}</span>
-    </div>
-    <p class="text-sm text-gray-600 mb-4">{{ brand.description }}</p>
-    @if (brand.url) {
-    <a
-      [href]="brand.url"
-      target="_blank"
-      class="text-blue-500 text-xs hover:underline"
-    >
-      公式サイト →
-    </a>
-    }
-  </div>
-  } @empty {
-  <div class="col-span-2 py-20 text-center text-gray-400">
-    該当するブランドがありません。
-  </div>
-  }
-</div> -->
 <!-- ブランド情報入力モーダル -->
 <app-brand-input-modal
   [isOpen]="isModalOpen"
   (closeModal)="closeModal()"
   (submitBrand)="submitBrand($event)"
 ></app-brand-input-modal>
-<!-- <app-edit-modal-base
-  [isOpen]="isModalOpen"
-  title="ブランド追加"
-  (submit)="saveBrand()"
-  (close)="isModalOpen = false"
->
-  <div class="space-y-4 mt-4">
-    <div>
-      <label class="block text-sm font-medium text-gray-700">ブランド名</label>
-      <input
-        type="text"
-        [(ngModel)]="newBrand.name"
-        class="w-full border p-2 rounded-lg mt-1"
-        placeholder="例: Nike"
-      />
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-700">カテゴリー</label>
-      <select
-        [(ngModel)]="newBrand.category"
-        name="brandCategory"
-        class="w-full border p-2 rounded-lg mt-1 bg-white"
-      >
-        @for (option of modalCategoryOptions; track option) {
-        <option [value]="option">{{ option }}</option>
-        }
-      </select>
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-700">説明</label>
-      <textarea
-        [(ngModel)]="newBrand.description"
-        class="w-full border p-2 rounded-lg mt-1"
-        rows="3"
-        placeholder="ブランドの詳細を入力"
-      ></textarea>
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-700"
-        >ウェブサイトURL</label
-      >
-      <input
-        type="url"
-        [(ngModel)]="newBrand.url"
-        class="w-full border p-2 rounded-lg mt-1"
-        placeholder="https://example.com"
-      />
-    </div>
-  </div>
-</app-edit-modal-base> -->
