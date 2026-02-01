@@ -44,15 +44,18 @@ export class FavoriteItemInputModalComponent implements OnInit {
 
   // ブランド一覧を読み込み
   loadBrands() {
+    console.log('ブランドデータ読み込み開始');
     this.isLoadingBrands = true;
     this.brandService.getBrands().subscribe({
       next: (brands) => {
+        console.log('ブランドデータ取得成功:', brands);
         this.brands = brands;
         this.isLoadingBrands = false;
       },
       error: (error) => {
         console.error('ブランドデータ読み込みエラー:', error);
-        this.brands = []; // エラー時は空配列に設定
+        console.error('エラー詳細:', error.status, error.statusText);
+        this.brands = []; // エラー時は空配列を設定
         this.isLoadingBrands = false;
       }
     });
@@ -74,8 +77,14 @@ export class FavoriteItemInputModalComponent implements OnInit {
 
   onSubmit() {
     if (this.item.itemName && this.item.brandName && this.item.category) {
-      this.submitItem.emit({ ...this.item });
-      this.resetForm();
+      this.submitItem.emit({
+        itemName: this.item.itemName,
+        brandName: this.item.brandName,
+        category: this.item.category,
+        price: this.item.price,
+        memo: this.item.memo,
+        url: this.item.url,
+      });
     }
   }
 

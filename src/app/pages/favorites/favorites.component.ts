@@ -1,21 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { AddButtonComponent } from '@/components/add-button/add-button.component';
-import { CardBaseComponent } from '@/components/card-base/card-base.component';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { CategoryTabsComponent } from '@/components/category-tabs/category-tabs.component';
 import { FavoriteItemInputModalComponent } from "@/components/favorite-item-input-modal/favorite-item-input-modal.component";
 import { FavoriteItemService, FavoriteItem } from '@/services/favorite-item.service';
+import { FavoriteItemCardComponent } from "@/components/favorite-item-card/favorite-item-card.component";
 
 @Component({
   selector: 'app-favorites',
   imports: [
     AddButtonComponent,
-    CardBaseComponent,
     FormsModule,
     CommonModule,
     CategoryTabsComponent,
-    FavoriteItemInputModalComponent
+    FavoriteItemInputModalComponent,
+    FavoriteItemCardComponent
 ],
   templateUrl: './favorites.component.html',
   styleUrl: './favorites.component.css',
@@ -91,8 +91,8 @@ export class FavoritesComponent implements OnInit {
   // 空のアイテムを作成
   private getEmptyItem(): Omit<FavoriteItem, 'id' | 'createdAt' | 'updatedAt'> {
     return {
-      brandName: '',
       itemName: '',
+      brandName: '',
       url: '',
       price: undefined,
       memo: '',

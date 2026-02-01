@@ -2,6 +2,7 @@ import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Brand {
@@ -26,9 +27,18 @@ export class BrandService {
 
   // 全ブランドを取得
   getBrands(): Observable<Brand[]> {
-    return this.http.get<Brand[]>(`${this.apiUrl}/brands`, {
+    const url = `${this.apiUrl}/brands`;
+    console.log('BrandService: ブランド取得リクエスト:', url);
+    console.log('BrandService: API URL:', this.apiUrl);
+    
+    return this.http.get<Brand[]>(url, {
       headers: { 'Content-Type': 'application/json' }
-    });
+    }).pipe(
+      // レスポンスをログ出力
+      tap((response: Brand[]) => {
+        console.log('BrandService: ブランド取得成功:', response);
+      })
+    );
   }
 
   // 特定のブランドを取得
