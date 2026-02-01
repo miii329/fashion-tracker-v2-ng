@@ -5,6 +5,7 @@ import { UserIconComponent } from './components/app-icon/app-icon.component';
 import { LoginModalComponent } from './components/login-modal/login-modal.component';
 import { RegisterModalComponent } from './components/register-modal/register-modal.component';
 import { AuthService } from './services/auth.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -32,9 +33,17 @@ export class AppComponent implements OnInit {
   // 新規登録モーダルの表示状態
   showRegisterModal = false;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit() {
+    // Renderのバックエンドを起こしに行く（Wake-up Call）
+    this.http.get('https://fashion-tracker-v2-api.onrender.com/api/v2/health_check')
+      .subscribe({
+        next: () => console.log('Backend is awake!'),
+        error: () => console.log('Backend is waking up...')
+      });
     // ユーザー状態を購読
     this.authService.currentUser$.subscribe((user) => {
       this.user = user;
