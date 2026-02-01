@@ -8,6 +8,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // ブラウザ環境でのみトークンを取得
   if (isPlatformBrowser(platformId)) {
     const token = localStorage.getItem('authToken');
+    console.log('AuthInterceptor: トークン確認:', token ? 'あり' : 'なし');
     
     if (token) {
       // トークンがある場合、Authorizationヘッダーを追加
@@ -16,7 +17,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           Authorization: `Bearer ${token}`
         }
       });
+      console.log('AuthInterceptor: 認証ヘッダーを付与');
       return next(clonedRequest);
+    } else {
+      console.log('AuthInterceptor: トークンがないため認証ヘッダーを付与できません');
     }
   }
   

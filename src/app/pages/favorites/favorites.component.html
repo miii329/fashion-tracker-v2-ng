@@ -13,42 +13,21 @@
 <!-- お気に入り商品一覧をグリッド表示 -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   @for (item of filteredFavorites; track item.id) {
-  <app-card-base [title]="item.itemName">
-    <div class="space-y-2">
-      <span
-        class="text-xs font-semibold px-2 py-1 bg-pink-50 rounded text-pink-600"
-      >
-        {{ item.brandName }}
-      </span>
-      <span class="text-xs bg-gray-100 px-2 py-1 rounded">{{
-        item.category
-      }}</span>
-
-      @if (item.price) {
-      <p class="text-sm font-bold text-gray-900">¥{{ item.price | number }}</p>
-      }
-      <p class="text-sm text-gray-600 line-clamp-3">
-        {{ item.memo }}
-      </p>
-      @if (item.url) {
-      <a
-        [href]="item.url"
-        target="_blank"
-        class="text-blue-500 text-xs hover:underline block pt-2"
-      >
-        商品リンク →
-      </a>
-      }
-    </div>
-  </app-card-base>
+    <app-favorite-item-card [item]="item"></app-favorite-item-card>
   } @empty {
-  <div class="col-span-full text-center py-10 text-gray-400">
-    <p>該当するカテゴリーのお気に入り商品は登録されていません。</p>
-  </div>
+    <div class="col-span-full text-center py-10 text-gray-400">
+      <p>該当するカテゴリーのお気に入り商品は登録されていません。</p>
+    </div>
   }
 </div>
 <!-- お気に入り商品入力モーダル -->
-<app-edit-modal-base
+<app-favorite-item-input-modal
+  [isOpen]="isModalOpen"
+  [item]="newItem"
+  (closeModal)="closeModal()"
+  (submitItem)="submitItem($event)"
+></app-favorite-item-input-modal>
+<!-- <app-edit-modal-base
   [isOpen]="isModalOpen"
   title="商品を追加 ✨"
   (submit)="saveItem()"
@@ -127,4 +106,4 @@
       ></textarea>
     </div>
   </div>
-</app-edit-modal-base>
+</app-edit-modal-base> -->
