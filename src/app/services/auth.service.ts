@@ -2,7 +2,7 @@ import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 interface User {
@@ -54,16 +54,9 @@ export class AuthService {
       })
       .pipe(
         tap((response: any) => {
-          // ブラウザ環境でのみトークンとユーザー情報を保存
+          // ブラウザ環境でのみユーザー情報を保存
           if (this.isBrowser) {
-            // RailsからauthTokenを取得
-            const token = response.authToken || response.token;
             const user = response.user || response;
-            
-            if (token) {
-              localStorage.setItem('authToken', token);
-              console.log('✅ authToken saved:', token.substring(0, 20) + '...');
-            }
             
             if (user) {
               localStorage.setItem('currentUser', JSON.stringify(user));
@@ -72,6 +65,13 @@ export class AuthService {
           }
           this.currentUserSubject.next(response.user || response);
         }),
+        // 新規登録後、自動ログイン
+        switchMap(() => {
+          return this.login({
+            email: userData.email,
+            password: userData.password
+          });
+        })
       );
   }
 
