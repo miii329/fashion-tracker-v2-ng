@@ -13,9 +13,9 @@
 </app-add-button>
 
 <!-- ブランド一覧をグリッド表示 -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+<div class="grid grid-cols-3 md:grid-cols-5 gap-4 mt-4">
   @for (brand of filteredBrands; track brand) {
-  <app-brand-card [brand]="brand"></app-brand-card>
+    <app-brand-card [brand]="brand"></app-brand-card>
   }
 </div>
 

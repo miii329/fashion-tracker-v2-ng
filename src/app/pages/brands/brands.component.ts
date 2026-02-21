@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { AddButtonComponent } from '@/components/add-button/add-button.component';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { CategoryTabsComponent } from '@/components/category-tabs/category-tabs.component';
-import { BrandInputModalComponent } from "@/components/brand-input-modal/brand-input-modal.component";
+import { BrandInputModalComponent } from '@/components/brand-input-modal/brand-input-modal.component';
 import { BrandService, Brand } from '@/services/brand.service';
-import { BrandCardComponent } from "@/components/brand-card/brand-card.component";
+import { BrandCardComponent } from '@/components/brand-card/brand-card.component';
 import { AuthService } from '@/services/auth.service';
+import { distinctUntilChanged } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-brands',
@@ -16,12 +18,14 @@ import { AuthService } from '@/services/auth.service';
     CommonModule,
     CategoryTabsComponent,
     BrandInputModalComponent,
-    BrandCardComponent
-],
+    BrandCardComponent,
+  ],
   templateUrl: './brands.component.html',
   styleUrl: './brands.component.css',
 })
 export class BrandsComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   // モーダル管理
   isModalOpen = false;
 
@@ -41,17 +45,25 @@ export class BrandsComponent implements OnInit {
   // ブランドリスト（後でRails APIから取得）
   brands: Brand[] = [];
 
-  constructor(private brandService: BrandService, private authService: AuthService) {}
+  constructor(
+    private brandService: BrandService,
+    private authService: AuthService,
+  ) {}
 
   // コンポーネント初期化時にブランドデータを読み込み
   ngOnInit() {
-    this.loadBrands();
-    
     // ログイン状態の変化を監視
-    this.authService.currentUser$.subscribe(() => {
-      // ユーザー状態が変わったらブランドデータを再読み込み
-      this.loadBrands();
-    });
+    this.authService.currentUser$
+      .pipe(
+        distinctUntilChanged(
+          (prev, curr) => prev?.id === curr?.id && prev?.email === curr?.email,
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        // ユーザー状態が変わったらブランドデータを再読み込み
+        this.loadBrands();
+      });
   }
 
   // ブランドデータをAPIから取得
@@ -65,7 +77,7 @@ export class BrandsComponent implements OnInit {
         },
         error: (error) => {
           console.error('ユーザーブランドデータ読み込みエラー:', error);
-        }
+        },
       });
     } else {
       // ログインしていない場合は空のリストを設定
@@ -105,15 +117,22 @@ export class BrandsComponent implements OnInit {
   }
 
   // 保存処理（Rails APIと連携）
-  async submitBrand(brandData: { name: string; category: string; description: string; url: string }) {
+  async submitBrand(brandData: {
+    name: string;
+    category: string;
+    description: string;
+    url: string;
+  }) {
     try {
       // BrandService経由でAPIにPOSTリクエストを送信
-      const newBrand = await this.brandService.createBrand({
-        name: brandData.name,
-        category: brandData.category,
-        description: brandData.description,
-        url: brandData.url
-      }).toPromise();
+      const newBrand = await this.brandService
+        .createBrand({
+          name: brandData.name,
+          category: brandData.category,
+          description: brandData.description,
+          url: brandData.url,
+        })
+        .toPromise();
 
       if (newBrand) {
         console.log('ブランドを保存しました:', newBrand);

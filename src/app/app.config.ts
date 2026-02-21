@@ -10,7 +10,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([authInterceptor]) // 認証インターセプターを追加
+      withInterceptors([authInterceptor]), // 認証インターセプターを追加
     ),
   ],
 };

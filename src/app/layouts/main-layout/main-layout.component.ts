@@ -1,26 +1,27 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { LoginModalComponent } from './components/login-modal/login-modal.component';
-import { RegisterModalComponent } from './components/register-modal/register-modal.component';
-import { UserIconComponent } from './components/app-icon/app-icon.component';
-import { AuthService } from './services/auth.service';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { distinctUntilChanged } from 'rxjs/operators';
+import { UserIconComponent } from '@/components/app-icon/app-icon.component';
+import { LoginModalComponent } from '@/components/login-modal/login-modal.component';
+import { RegisterModalComponent } from '@/components/register-modal/register-modal.component';
+import { AuthService } from '@/services/auth.service';
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-main-layout',
   imports: [
     CommonModule,
     RouterLink,
+    RouterLinkActive,
     RouterOutlet,
+    UserIconComponent,
     LoginModalComponent,
     RegisterModalComponent,
-    UserIconComponent,
   ],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  templateUrl: './main-layout.component.html',
+  styleUrl: './main-layout.component.css',
 })
-export class AppComponent implements OnInit {
+export class MainLayoutComponent implements OnInit {
   user: any = null;
   showLoginModal = false;
   showRegisterModal = false;
@@ -36,6 +37,7 @@ export class AppComponent implements OnInit {
       )
       .subscribe((user) => {
         this.user = user;
+        console.log('currentUser updated:', user);
       });
   }
 
@@ -64,10 +66,12 @@ export class AppComponent implements OnInit {
 
   handleLogin(credentials: { email: string; password: string }) {
     this.authService.login(credentials).subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('ログイン成功', response);
         this.closeLoginModal();
       },
-      error: () => {
+      error: (error) => {
+        console.error('ログインエラー', error);
         alert(
           'ログインに失敗しました。メールアドレスまたはパスワードが正しくありません。',
         );
@@ -87,11 +91,18 @@ export class AppComponent implements OnInit {
     }
 
     this.authService.register(userData).subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('新規登録成功', response);
         this.closeRegisterModal();
         alert('登録が完了しました！');
       },
       error: (error) => {
+        console.error('新規登録エラー - 完全なエラーオブジェクト:', error);
+        console.error('ステータスコード:', error.status);
+        console.error('エラーメッセージ:', error.message);
+        console.error('エラーレスポンス:', error.error);
+        console.error('エラーURL:', error.url);
+
         let errorMessage = '登録に失敗しました。もう一度お試しください。';
 
         if (error.status === 0) {
@@ -119,7 +130,8 @@ export class AppComponent implements OnInit {
     if (confirm('ログアウトしますか？')) {
       this.authService.logout().subscribe({
         next: () => {
-          this.user = null;
+          console.log('ログアウトしました');
+          console.log('current user after logout:', this.user);
         },
         error: (error) => {
           console.error('ログアウトエラー', error);
