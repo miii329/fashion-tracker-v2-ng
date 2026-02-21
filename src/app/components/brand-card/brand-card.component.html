@@ -1,13 +1,25 @@
 <app-card-base [title]="brand.name">
-  <div class="space-y-2">
+  <div
+    class="border rounded-lg space-y-2 transition-hover hover:shadow-md"
+    [class.cursor-pointer]="!!brand.id || !!brand.url"
+    [attr.role]="brand.id || brand.url ? 'link' : null"
+    [attr.tabindex]="brand.id || brand.url ? 0 : null"
+    (click)="navigateToBrandDetail()"
+    (keydown.enter)="navigateToBrandDetail()"
+    (keydown.space)="navigateToBrandDetail()"
+  >
+    <div class="brand-logo">
+      @if (faviconUrl && !faviconLoadError) {
+        <img
+          [src]="faviconUrl"
+          [alt]="brand.name + ' icon'"
+          class="w-full h-full"
+          (error)="onFaviconError()"
+        />
+      }
+    </div>
     <p class="text-sm text-gray-600">{{ brand.category }}</p>
     <p class="text-sm">{{ brand.description }}</p>
-    <a
-      [href]="brand.url"
-      target="_blank"
-      class="text-blue-500 hover:underline text-sm"
-    >
-      公式サイト →
-    </a>
   </div>
+  <p class="font-semibold">{{ brand.name }}</p>
 </app-card-base>

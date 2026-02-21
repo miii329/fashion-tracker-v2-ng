@@ -10,6 +10,8 @@ import { EditModalBaseComponent } from '../edit-modal-base/edit-modal-base.compo
   styleUrl: './brand-input-modal.component.css',
 })
 export class BrandInputModalComponent {
+  faviconLoadError = false;
+
   @Input() isOpen = false;
 
   @Output() closeModal = new EventEmitter<void>();
@@ -64,5 +66,86 @@ export class BrandInputModalComponent {
   // バリデーション
   get isValid(): boolean {
     return !!(this.brand.name && this.brand.category);
+  }
+
+  get faviconPreviewUrl(): string {
+    const domain =
+      this.extractDomain(this.brand.url) ||
+      this.suggestedDomain ||
+      this.extractDomain(this.brand.name);
+    if (!domain) {
+      return '';
+    }
+    return `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(domain)}`;
+  }
+
+  get suggestedDomain(): string {
+    return this.buildDomainCandidateFromName(this.brand.name) || '';
+  }
+
+  get showDomainSuggestion(): boolean {
+    return !this.brand.url.trim() && !!this.suggestedDomain;
+  }
+
+  applySuggestedUrl() {
+    if (!this.suggestedDomain) {
+      return;
+    }
+    this.brand.url = `https://${this.suggestedDomain}`;
+    this.resetFaviconError();
+  }
+
+  handleFaviconError() {
+    this.faviconLoadError = true;
+  }
+
+  resetFaviconError() {
+    this.faviconLoadError = false;
+  }
+
+  private extractDomain(input: string): string | null {
+    if (!input) {
+      return null;
+    }
+
+    const trimmed = input.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    try {
+      return new URL(trimmed).hostname;
+    } catch {
+      try {
+        return new URL(`https://${trimmed}`).hostname;
+      } catch {
+        return (
+          trimmed
+            .replace(/^https?:\/\//, '')
+            .split('/')[0]
+            .toLowerCase() || null
+        );
+      }
+    }
+  }
+
+  private buildDomainCandidateFromName(name: string): string | null {
+    const normalized = name
+      .trim()
+      .toLowerCase()
+      .replace(/['’]/g, '')
+      .replace(/&/g, '')
+      .replace(/[^a-z0-9.\s-]/g, '')
+      .replace(/[\s-]+/g, '');
+
+    if (!normalized) {
+      return null;
+    }
+
+    if (normalized.includes('.')) {
+      return normalized;
+    }
+
+    return `${normalized}.com`;
   }
 }
