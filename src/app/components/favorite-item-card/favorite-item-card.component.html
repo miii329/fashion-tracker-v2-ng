@@ -1,5 +1,13 @@
 <app-card-base [title]="item.itemName">
   <div class="space-y-2">
+    @if (item.imageUrl) {
+      <img
+        [src]="item.imageUrl"
+        alt="商品画像"
+        class="w-full aspect-square object-cover rounded"
+      />
+    }
+    <span class="block">{{ item.itemName }}</span>
     <span
       class="text-xs font-semibold px-2 py-1 bg-pink-50 rounded text-pink-600"
     >
@@ -15,13 +23,12 @@
     <p class="text-sm text-gray-600 line-clamp-3">
       {{ item.memo }}
     </p>
-    @if (item.url) {
+    @if (item.id !== undefined && item.id !== null) {
       <a
-        [href]="item.url"
-        target="_blank"
-        class="text-blue-500 text-xs hover:underline block pt-2"
+        [routerLink]="['/favorites', item.id]"
+        class="text-gray-700 text-xs hover:underline block"
       >
-        商品リンク →
+        > 詳細を見る
       </a>
     }
   </div>

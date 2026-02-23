@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Brand, BrandService } from '@/services/brand.service';
 import {
   FavoriteItem,
@@ -9,7 +9,7 @@ import {
 
 @Component({
   selector: 'app-brand-detail',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     @if (isLoading) {
       <div class="mt-10 text-gray-500">読み込み中...</div>
@@ -47,7 +47,15 @@ import {
       <div class="mt-8 grid grid-cols-2 gap-x-10 gap-y-6">
         @for (item of displayItems; track item.id ?? item.itemName) {
           <div>
-            <div class="w-[136px] h-[136px] bg-gray-300"></div>
+            @if (item.imageUrl) {
+              <img
+                [src]="item.imageUrl"
+                [alt]="item.itemName"
+                class="w-[136px] h-[136px] object-cover rounded"
+              />
+            } @else {
+              <div class="w-[136px] h-[136px] bg-gray-300"></div>
+            }
             <p class="mt-4 text-[16px] leading-7 break-words">
               {{ item.itemName }}
             </p>
@@ -56,25 +64,18 @@ import {
             </p>
           </div>
         } @empty {
-          <div>
-            <div class="w-[136px] h-[136px] bg-gray-300"></div>
-            <p class="mt-4 text-[16px] leading-7">お気に入り未登録</p>
-            <p class="mt-3 text-[32px] leading-none">-</p>
-          </div>
-          <div>
-            <div class="w-[136px] h-[136px] bg-gray-300"></div>
-            <p class="mt-4 text-[16px] leading-7">お気に入り未登録</p>
-            <p class="mt-3 text-[32px] leading-none">-</p>
-          </div>
+          <p class="text-gray-500">
+            まだお気に入り登録されたアイテムはありません。
+          </p>
         }
       </div>
 
-      <button
+      <!-- <button
         type="button"
         class="fixed right-6 bottom-6 w-14 h-14 rounded-full bg-black text-white text-[10px]"
       >
         絞り込む
-      </button>
+      </button> -->
     }
   `,
   styles: [],
