@@ -11,12 +11,16 @@
 >
 </app-add-button>
 <!-- お気に入り商品一覧をグリッド表示 -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
   @for (item of filteredFavorites; track item.id) {
     <app-favorite-item-card [item]="item"></app-favorite-item-card>
   } @empty {
     <div class="col-span-full text-center py-10 text-gray-400">
-      <p>該当するカテゴリーのお気に入り商品は登録されていません。</p>
+      @if (showLoginRequiredMessage) {
+        <p>ログインするとお気に入り商品を表示できます。</p>
+      } @else {
+        <p>該当するカテゴリーのお気に入り商品は登録されていません。</p>
+      }
     </div>
   }
 </div>

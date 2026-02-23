@@ -1,8 +1,8 @@
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap, switchMap } from 'rxjs/operators';
+import { tap, switchMap, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 interface User {
@@ -57,7 +57,7 @@ export class AuthService {
           // ブラウザ環境でのみユーザー情報を保存
           if (this.isBrowser) {
             const user = response.user || response;
-            
+
             if (user) {
               localStorage.setItem('currentUser', JSON.stringify(user));
               console.log('✅ User saved:', user.email_address || user.email);
@@ -69,9 +69,9 @@ export class AuthService {
         switchMap(() => {
           return this.login({
             email: userData.email,
-            password: userData.password
+            password: userData.password,
           });
-        })
+        }),
       );
   }
 
@@ -81,31 +81,77 @@ export class AuthService {
     password: string;
   }): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.apiUrl}/session`, {
-        email_address: credentials.email,
-        password: credentials.password,
-      }, {})
+      .post<AuthResponse>(
+        `${this.apiUrl}/session`,
+        {
+          email_address: credentials.email,
+          password: credentials.password,
+        },
+        { observe: 'response' },
+      )
       .pipe(
-        tap((response: any) => {
+        tap((response: HttpResponse<AuthResponse>) => {
           // ブラウザ環境でのみトークンとユーザー情報を保存
           if (this.isBrowser) {
-            // RailsからauthTokenを取得
-            const token = response.authToken || response.token;
-            const user = response.user || response;
-            
+            const responseBody = response.body as any;
+            const token = this.extractAuthToken(responseBody, response.headers);
+            const user = responseBody?.user || responseBody;
+
             if (token) {
               localStorage.setItem('authToken', token);
-              console.log('✅ authToken saved:', token.substring(0, 20) + '...');
+              console.log(
+                '✅ authToken saved:',
+                token.substring(0, 20) + '...',
+              );
             }
-            
+
             if (user) {
               localStorage.setItem('currentUser', JSON.stringify(user));
               console.log('✅ User saved:', user.email_address || user.email);
             }
           }
-          this.currentUserSubject.next(response.user || response);
+          this.currentUserSubject.next(
+            (response.body as any)?.user || response.body,
+          );
         }),
+        map(
+          (response: HttpResponse<AuthResponse>) =>
+            response.body as AuthResponse,
+        ),
       );
+  }
+
+  private extractAuthToken(
+    responseBody: any,
+    headers: HttpHeaders,
+  ): string | null {
+    const bodyToken = responseBody?.authToken || responseBody?.token;
+    if (bodyToken) {
+      return bodyToken;
+    }
+
+    const headerCandidates = [
+      'authorization',
+      'x-auth-token',
+      'auth-token',
+      'access-token',
+    ];
+
+    for (const headerName of headerCandidates) {
+      const value = headers.get(headerName);
+      if (!value) {
+        continue;
+      }
+
+      const bearerMatch = value.match(/^Bearer\s+(.+)$/i);
+      if (bearerMatch?.[1]) {
+        return bearerMatch[1].trim();
+      }
+
+      return value.trim();
+    }
+
+    return null;
   }
 
   // ログアウト

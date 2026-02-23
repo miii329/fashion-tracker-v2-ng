@@ -1,0 +1,56 @@
+@if (isLoading) {
+  <div class="mt-10 text-gray-500">読み込み中...</div>
+} @else if (errorMessage) {
+  <div class="mt-10 text-red-500">{{ errorMessage }}</div>
+  <a
+    href="/favorites"
+    class="inline-block mt-4 text-sm text-blue-600 hover:underline"
+  >
+    お気に入り一覧へ戻る
+  </a>
+} @else if (item) {
+  <div class="space-y-6">
+    <div class="bg-white rounded-xl p-5 md:p-6">
+      <h1 class="mt-4 text-2xl font-bold text-gray-900">{{ item.itemName }}</h1>
+      <p class="mt-4 mb-4 text-xl font-bold text-gray-900">
+        {{ formatPrice(item.price) }}
+      </p>
+      @if (item.imageUrl) {
+        <img
+          [src]="item.imageUrl"
+          alt="商品画像"
+          class="w-full max-w-md aspect-square object-cover rounded"
+        />
+      }
+      <div class="mt-3 flex flex-wrap gap-2 text-sm">
+        <span
+          class="px-2 py-1 bg-pink-50 rounded text-pink-600 font-semibold"
+          >{{ item.brandName }}</span
+        >
+        <span class="px-2 py-1 bg-gray-100 rounded text-gray-700">{{
+          item.category
+        }}</span>
+      </div>
+
+      @if (item.memo) {
+        <div class="mt-4">
+          <p class="text-xs text-gray-500 mb-1">メモ</p>
+          <p class="text-sm text-gray-700 whitespace-pre-wrap">
+            {{ item.memo }}
+          </p>
+        </div>
+      }
+
+      @if (item.url) {
+        <a
+          [href]="item.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block mt-4 text-sm text-blue-600 hover:underline break-all"
+        >
+          商品リンクを開く
+        </a>
+      }
+    </div>
+  </div>
+}
